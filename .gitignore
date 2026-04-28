@@ -1,0 +1,25 @@
+# Environment
+.env
+.venv/
+venv/
+
+# Data files (large — fetch locally with fetch_trials.py)
+data/raw_trials*.json
+data/processed_trials*.json
+data/faiss_index/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+
+# Notebooks
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db

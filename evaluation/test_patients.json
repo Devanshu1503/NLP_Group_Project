@@ -1,0 +1,63 @@
+[
+  {
+    "id": "test_001",
+    "description": "I am a 58-year-old woman with Type 2 diabetes. My HbA1c is 7.9%. I take metformin 500mg daily. I live in Chicago, Illinois.",
+    "ground_truth": {
+      "age": 58,
+      "gender": "female",
+      "conditions": ["Type 2 Diabetes"],
+      "medications": ["metformin"],
+      "lab_values": {"HbA1c": "7.9%"},
+      "location": "Chicago, IL"
+    }
+  },
+  {
+    "id": "test_002",
+    "description": "63 year old male with Parkinson's disease diagnosed 2 years ago. I take levodopa. I live in Evanston, Illinois.",
+    "ground_truth": {
+      "age": 63,
+      "gender": "male",
+      "conditions": ["Parkinson's Disease"],
+      "medications": ["levodopa"],
+      "lab_values": {},
+      "location": "Evanston, IL"
+    }
+  },
+  {
+    "id": "test_003",
+    "description": "I'm a 44-year-old woman with breast cancer, stage 1, ER positive. Just finished radiation. No medications currently. In Oak Park, IL.",
+    "ground_truth": {
+      "age": 44,
+      "gender": "female",
+      "conditions": ["Breast Cancer"],
+      "medications": [],
+      "lab_values": {},
+      "location": "Oak Park, IL",
+      "cancer_stage": "Stage 1"
+    }
+  },
+  {
+    "id": "test_004",
+    "description": "50-year-old man with heart failure and high blood pressure. On lisinopril and spironolactone. EF is 40%. Chicago, Illinois.",
+    "ground_truth": {
+      "age": 50,
+      "gender": "male",
+      "conditions": ["Heart Failure", "Hypertension"],
+      "medications": ["lisinopril", "spironolactone"],
+      "lab_values": {"ejection_fraction": "40%"},
+      "location": "Chicago, IL"
+    }
+  },
+  {
+    "id": "test_005",
+    "description": "35-year-old female with multiple sclerosis. Taking interferon beta-1a. In relapsing-remitting phase. Live in Naperville, Illinois.",
+    "ground_truth": {
+      "age": 35,
+      "gender": "female",
+      "conditions": ["Multiple Sclerosis"],
+      "medications": ["interferon beta-1a"],
+      "lab_values": {},
+      "location": "Naperville, IL"
+    }
+  }
+]

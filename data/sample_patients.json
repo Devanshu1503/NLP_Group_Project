@@ -1,0 +1,126 @@
+[
+  {
+    "id": "patient_001",
+    "description": "I am a 52-year-old woman with Type 2 diabetes diagnosed 6 years ago. I take metformin 1000mg twice daily. My last HbA1c was 8.2%. I have early signs of kidney disease. I live in Chicago, Illinois.",
+    "ground_truth": {
+      "age": 52,
+      "gender": "female",
+      "conditions": ["Type 2 Diabetes", "Chronic Kidney Disease"],
+      "medications": ["metformin"],
+      "lab_values": {"HbA1c": "8.2%"},
+      "location": "Chicago, IL"
+    }
+  },
+  {
+    "id": "patient_002",
+    "description": "I'm 67 years old, male, recently diagnosed with early stage Alzheimer's. I don't take any medications yet. I live in Evanston, Illinois and can travel up to 30 miles.",
+    "ground_truth": {
+      "age": 67,
+      "gender": "male",
+      "conditions": ["Alzheimer's Disease"],
+      "medications": [],
+      "lab_values": {},
+      "location": "Evanston, IL"
+    }
+  },
+  {
+    "id": "patient_003",
+    "description": "45 year old man with high blood pressure and high cholesterol. On lisinopril 10mg and atorvastatin 40mg. No other conditions. Based in Oak Park, IL.",
+    "ground_truth": {
+      "age": 45,
+      "gender": "male",
+      "conditions": ["Hypertension", "Hypercholesterolemia"],
+      "medications": ["lisinopril", "atorvastatin"],
+      "lab_values": {},
+      "location": "Oak Park, IL"
+    }
+  },
+  {
+    "id": "patient_004",
+    "description": "I was diagnosed with breast cancer last year, stage 2, HER2 positive. I finished chemotherapy 3 months ago. I'm 48 and female. I'm in Naperville, Illinois.",
+    "ground_truth": {
+      "age": 48,
+      "gender": "female",
+      "conditions": ["Breast Cancer", "HER2 Positive"],
+      "medications": [],
+      "lab_values": {},
+      "location": "Naperville, IL",
+      "cancer_stage": "Stage 2"
+    }
+  },
+  {
+    "id": "patient_005",
+    "description": "I have Crohn's disease and I've been on biologics — specifically adalimumab — for 2 years. I'm 33 years old, female. Currently in remission. I live in Chicago.",
+    "ground_truth": {
+      "age": 33,
+      "gender": "female",
+      "conditions": ["Crohn's Disease"],
+      "medications": ["adalimumab"],
+      "lab_values": {},
+      "location": "Chicago, IL",
+      "disease_status": "remission"
+    }
+  },
+  {
+    "id": "patient_006",
+    "description": "55-year-old male with Parkinson's disease, diagnosed 3 years ago. Taking carbidopa-levodopa. No cognitive issues. Live in Schaumburg, IL.",
+    "ground_truth": {
+      "age": 55,
+      "gender": "male",
+      "conditions": ["Parkinson's Disease"],
+      "medications": ["carbidopa-levodopa"],
+      "lab_values": {},
+      "location": "Schaumburg, IL"
+    }
+  },
+  {
+    "id": "patient_007",
+    "description": "I'm a healthy 29-year-old woman looking to participate in any clinical research. No conditions, no medications. I live in Chicago, IL.",
+    "ground_truth": {
+      "age": 29,
+      "gender": "female",
+      "conditions": [],
+      "medications": [],
+      "lab_values": {},
+      "location": "Chicago, IL",
+      "healthy_volunteer": true
+    }
+  },
+  {
+    "id": "patient_008",
+    "description": "71 year old man with heart failure. My ejection fraction is 35%. I'm on carvedilol and furosemide. I have a pacemaker. Live in Joliet, Illinois.",
+    "ground_truth": {
+      "age": 71,
+      "gender": "male",
+      "conditions": ["Heart Failure"],
+      "medications": ["carvedilol", "furosemide"],
+      "lab_values": {"ejection_fraction": "35%"},
+      "devices": ["pacemaker"],
+      "location": "Joliet, IL"
+    }
+  },
+  {
+    "id": "patient_009",
+    "description": "I have lupus and have been on hydroxychloroquine for 4 years. I'm 38 female. Recent flare-up with joint pain and fatigue. In Waukegan, Illinois.",
+    "ground_truth": {
+      "age": 38,
+      "gender": "female",
+      "conditions": ["Lupus", "Systemic Lupus Erythematosus"],
+      "medications": ["hydroxychloroquine"],
+      "lab_values": {},
+      "location": "Waukegan, IL"
+    }
+  },
+  {
+    "id": "patient_010",
+    "description": "62-year-old man with Type 2 diabetes and obesity. BMI is 34. On insulin glargine and metformin. HbA1c of 9.1%. Never smoked. Chicago area.",
+    "ground_truth": {
+      "age": 62,
+      "gender": "male",
+      "conditions": ["Type 2 Diabetes", "Obesity"],
+      "medications": ["insulin glargine", "metformin"],
+      "lab_values": {"HbA1c": "9.1%", "BMI": "34"},
+      "location": "Chicago, IL"
+    }
+  }
+]

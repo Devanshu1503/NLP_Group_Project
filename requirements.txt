@@ -1,0 +1,36 @@
+# Core
+python-dotenv>=1.0.0
+pydantic>=2.5.0
+
+# LLM & Agents
+langchain>=0.3.0
+langchain-anthropic>=0.3.0
+anthropic>=0.50.0
+
+# NER & Transformers
+transformers>=4.41.0
+torch>=2.3.0
+datasets>=2.19.0
+seqeval>=1.2.2
+
+# Embeddings & Vector DB
+sentence-transformers>=3.0.0
+faiss-cpu>=1.8.0
+
+# Data & Analysis
+requests>=2.32.0
+pandas>=2.2.0
+numpy>=1.26.0
+tqdm>=4.66.0
+
+# API
+fastapi>=0.111.0
+uvicorn[standard]>=0.30.0
+python-multipart>=0.0.9
+
+# Notebooks & Viz
+jupyter>=1.0.0
+matplotlib>=3.9.0
+seaborn>=0.13.0
+wordcloud>=1.9.3
+umap-learn>=0.5.6
