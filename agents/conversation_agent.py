@@ -4,7 +4,10 @@ Collects patient info through natural dialogue and signals when enough
 data has been gathered to run the retrieval pipeline.
 """
 import os
+from dotenv import load_dotenv
 from anthropic import Anthropic
+
+load_dotenv()
 from ner.schemas import PatientProfile
 from ner.ner_llm import extract_profile_from_conversation
 

@@ -27,10 +27,8 @@ class KeywordRetriever:
         params = {
             "query.cond": keywords,
             "filter.overallStatus": "RECRUITING",
-            "pageSize": top_k,
+            "pageSize": top_k * 2,  # Fetch extra to allow for post-filter attrition
         }
-        if profile.gender and profile.gender.lower() in ("male", "female"):
-            params["filter.sex"] = profile.gender.upper()
 
         response = requests.get(CTGOV_API, params=params, timeout=30)
         response.raise_for_status()
@@ -43,6 +41,13 @@ class KeywordRetriever:
             elig_mod = proto.get("eligibilityModule", {})
             cond_mod = proto.get("conditionsModule", {})
             loc_mod = proto.get("contactsLocationsModule", {})
+
+            trial_gender = elig_mod.get("sex", "ALL").upper()
+            if trial_gender not in ("ALL", "") and profile.gender:
+                if trial_gender == "MALE" and profile.gender.lower() != "male":
+                    continue
+                if trial_gender == "FEMALE" and profile.gender.lower() != "female":
+                    continue
 
             locs = [
                 f"{l.get('city', '')}, {l.get('state', '')}"
@@ -59,4 +64,4 @@ class KeywordRetriever:
                 "retrieval_method": "keyword_ctgov",
             })
 
-        return results
+        return results[:top_k]

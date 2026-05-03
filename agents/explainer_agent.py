@@ -3,8 +3,11 @@ Agent 4: Plain-English trial explainer with safety guardrails.
 Strictly grounded — only uses data present in the retrieved trial records.
 """
 import os
+from dotenv import load_dotenv
 from typing import List, Dict
 from anthropic import Anthropic
+
+load_dotenv()
 from ner.schemas import PatientProfile
 
 client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
