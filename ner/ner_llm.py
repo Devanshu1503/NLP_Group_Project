@@ -4,7 +4,10 @@ Uses structured JSON output with prompt caching on the system prompt.
 """
 import json
 import os
+from dotenv import load_dotenv
 from anthropic import Anthropic
+
+load_dotenv()
 from ner.schemas import PatientProfile
 
 client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))

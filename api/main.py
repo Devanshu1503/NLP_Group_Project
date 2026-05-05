@@ -11,9 +11,15 @@ Endpoints:
 """
 import uuid
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import Optional
 
+from dotenv import load_dotenv
+load_dotenv()
+
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from agents.conversation_agent import ConversationAgent
@@ -22,6 +28,7 @@ from agents.explainer_agent import explain_trials
 
 # Loaded lazily at startup — requires FAISS index to exist
 semantic_retriever = None
+bioBERT_extractor = None
 keyword_retriever = KeywordRetriever()
 
 # In-memory session store — fine for dev/demo, use Redis in production
@@ -30,16 +37,24 @@ sessions: dict[str, ConversationAgent] = {}
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global semantic_retriever
+    global semantic_retriever, bioBERT_extractor
     try:
         from retrieval.retriever_semantic import SemanticRetriever
         semantic_retriever = SemanticRetriever()
         print("Semantic retriever loaded.")
     except Exception as e:
         print(f"Warning: semantic retriever unavailable ({e}). Run retrieval/embed_trials.py first.")
+    try:
+        from ner.ner_bioBERT import BioBERTExtractor
+        bioBERT_extractor = BioBERTExtractor()
+        print("BioBERT extractor loaded.")
+    except Exception as e:
+        print(f"Warning: BioBERT extractor unavailable ({e}).")
     yield
     sessions.clear()
 
+
+_STATIC = Path(__file__).parent / "static"
 
 app = FastAPI(
     title="TrialNav API",
@@ -47,6 +62,13 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan,
 )
+
+app.mount("/static", StaticFiles(directory=_STATIC), name="static")
+
+
+@app.get("/", include_in_schema=False)
+def root():
+    return FileResponse(_STATIC / "index.html")
 
 
 class ChatRequest(BaseModel):
@@ -102,6 +124,47 @@ async def chat(request: ChatRequest):
         profile_complete=profile_complete,
         trials_found=trials_found,
     )
+
+
+class NERCompareRequest(BaseModel):
+    text: str
+
+
+@app.post("/compare-ner")
+async def compare_ner(request: NERCompareRequest):
+    import time
+    from ner.ner_llm import extract_profile_llm
+
+    results = {}
+
+    t0 = time.time()
+    try:
+        llm_profile = extract_profile_llm(request.text)
+        results["llm"] = {
+            "profile": llm_profile.model_dump(exclude={"missing_fields"}),
+            "missing_fields": llm_profile.missing_fields,
+            "time_seconds": round(time.time() - t0, 2),
+            "error": None,
+        }
+    except Exception as e:
+        results["llm"] = {"profile": None, "missing_fields": [], "time_seconds": round(time.time() - t0, 2), "error": str(e)}
+
+    t0 = time.time()
+    if bioBERT_extractor:
+        try:
+            bio_profile = bioBERT_extractor.extract_profile(request.text)
+            results["bioBERT"] = {
+                "profile": bio_profile.model_dump(exclude={"missing_fields"}),
+                "missing_fields": bio_profile.missing_fields,
+                "time_seconds": round(time.time() - t0, 2),
+                "error": None,
+            }
+        except Exception as e:
+            results["bioBERT"] = {"profile": None, "missing_fields": [], "time_seconds": round(time.time() - t0, 2), "error": str(e)}
+    else:
+        results["bioBERT"] = {"profile": None, "missing_fields": [], "time_seconds": 0, "error": "BioBERT model not loaded at startup"}
+
+    return results
 
 
 @app.delete("/session/{session_id}")
