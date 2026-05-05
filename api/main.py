@@ -11,12 +11,15 @@ Endpoints:
 """
 import uuid
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import Optional
 
 from dotenv import load_dotenv
 load_dotenv()
 
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from agents.conversation_agent import ConversationAgent
@@ -44,12 +47,21 @@ async def lifespan(app: FastAPI):
     sessions.clear()
 
 
+_STATIC = Path(__file__).parent / "static"
+
 app = FastAPI(
     title="TrialNav API",
     description="Patient-facing clinical trial matching via conversational NLP + RAG",
     version="0.1.0",
     lifespan=lifespan,
 )
+
+app.mount("/static", StaticFiles(directory=_STATIC), name="static")
+
+
+@app.get("/", include_in_schema=False)
+def root():
+    return FileResponse(_STATIC / "index.html")
 
 
 class ChatRequest(BaseModel):
