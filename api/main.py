@@ -9,6 +9,10 @@ Endpoints:
     DELETE /session/:id — clear a session
     GET  /health        — liveness check
 """
+import json
+import os
+import shutil
+import tempfile
 import uuid
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -17,7 +21,7 @@ from typing import Optional
 from dotenv import load_dotenv
 load_dotenv()
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -25,11 +29,14 @@ from pydantic import BaseModel
 from agents.conversation_agent import ConversationAgent
 from retrieval.retriever_keyword import KeywordRetriever
 from agents.explainer_agent import explain_trials
+from agents.diagnostic_agent import DiagnosticAgent
+from ner.biomarker_extractor import extract_from_pdf, extract_from_text
 
 # Loaded lazily at startup — requires FAISS index to exist
 semantic_retriever = None
 bioBERT_extractor = None
 keyword_retriever = KeywordRetriever()
+diagnostic_agent = DiagnosticAgent()
 
 # In-memory session store — fine for dev/demo, use Redis in production
 sessions: dict[str, ConversationAgent] = {}
@@ -165,6 +172,58 @@ async def compare_ner(request: NERCompareRequest):
         results["bioBERT"] = {"profile": None, "missing_fields": [], "time_seconds": 0, "error": "BioBERT model not loaded at startup"}
 
     return results
+
+
+@app.post("/analyze-report")
+async def analyze_report(
+    file: UploadFile = File(None),
+    lab_text: str = Form(None),
+    session_id: str = Form(None),
+    symptoms: str = Form(""),
+):
+    """
+    Accept either a PDF upload or raw pasted lab text.
+    Extract biomarkers, run diagnostic reasoning, return structured findings.
+    """
+    session_id = session_id or str(uuid.uuid4())
+
+    biomarker_data = {}
+    if file and file.filename and file.filename.endswith(".pdf"):
+        with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
+            shutil.copyfileobj(file.file, tmp)
+            tmp_path = tmp.name
+        biomarker_data = extract_from_pdf(tmp_path)
+        os.unlink(tmp_path)
+    elif lab_text:
+        biomarker_data = extract_from_text(lab_text)
+    else:
+        return {"error": "Provide either a PDF file or lab_text"}
+
+    biomarkers = biomarker_data.get("biomarkers", {})
+    symptom_list = [s.strip() for s in symptoms.split(",") if s.strip()]
+
+    diagnosis = diagnostic_agent.reason(biomarkers=biomarkers, symptoms=symptom_list)
+
+    # Inject biomarker context into existing session if present
+    if session_id in sessions and biomarkers and not diagnosis.get("error"):
+        summary = diagnosis.get("reasoning_summary", "")
+        sessions[session_id].messages.append({
+            "role": "user",
+            "content": f"[LAB REPORT UPLOADED] Biomarkers found: {json.dumps(biomarkers)}. Reasoning: {summary}",
+        })
+
+    return {
+        "session_id": session_id,
+        "biomarkers_found": len(biomarkers),
+        "biomarkers": biomarkers,
+        "biomarker_interpretation": diagnosis.get("biomarker_interpretation", []),
+        "suggested_conditions": diagnosis.get("suggested_conditions", []),
+        "trial_relevant_values": diagnosis.get("trial_relevant_values", []),
+        "recommended_trial_types": diagnosis.get("recommended_trial_types", []),
+        "reasoning_summary": diagnosis.get("reasoning_summary", ""),
+        "physician_note": diagnosis.get("physician_note", "Always confirm findings with your physician."),
+        "next_step": "Continue the chat to describe your symptoms and get matched to specific clinical trials.",
+    }
 
 
 @app.delete("/session/{session_id}")

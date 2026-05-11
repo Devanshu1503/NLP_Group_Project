@@ -12,7 +12,6 @@ from ner.schemas import PatientProfile
 
 NER_MODEL = "dslim/bert-base-NER"
 
-# Illinois cities for location resolution
 _IL_CITIES = {
     "chicago", "evanston", "oak park", "naperville", "schaumburg",
     "joliet", "waukegan", "aurora", "rockford", "peoria", "elgin",
@@ -23,6 +22,37 @@ _STATE_MAP = {
     "texas": "TX", "florida": "FL", "ohio": "OH", "michigan": "MI",
 }
 
+# Expanded medication list covering common drug names + brand names
+COMMON_MEDICATIONS = [
+    # Diabetes
+    "metformin", "insulin glargine", "insulin lispro", "insulin aspart",
+    "empagliflozin", "jardiance", "dapagliflozin", "farxiga",
+    "semaglutide", "ozempic", "wegovy", "liraglutide", "victoza",
+    "sitagliptin", "januvia", "glipizide", "glimepiride", "pioglitazone",
+    # Cardiovascular
+    "lisinopril", "atorvastatin", "losartan", "amlodipine",
+    "carvedilol", "coreg", "furosemide", "lasix", "spironolactone",
+    "hydrochlorothiazide", "metoprolol", "bisoprolol",
+    "warfarin", "coumadin", "apixaban", "eliquis", "rivaroxaban", "xarelto",
+    # Rheumatology / Immunology
+    "adalimumab", "humira", "etanercept", "enbrel",
+    "hydroxychloroquine", "plaquenil", "prednisone", "methotrexate",
+    "rituximab", "tocilizumab",
+    # Oncology
+    "pembrolizumab", "keytruda", "trastuzumab", "herceptin",
+    "ibrutinib", "lenalidomide", "bortezomib",
+    # Neurology
+    "levodopa", "carbidopa", "carbidopa-levodopa",
+    "donepezil", "aricept", "memantine", "namenda",
+    "gabapentin", "pregabalin", "lyrica",
+    # Psychiatry
+    "sertraline", "zoloft", "fluoxetine", "prozac",
+    "escitalopram", "lexapro", "duloxetine", "cymbalta",
+    "bupropion", "wellbutrin", "quetiapine", "seroquel",
+    # GI / Other
+    "omeprazole", "pantoprazole", "levothyroxine", "synthroid",
+]
+
 
 class BioBERTExtractor:
     def __init__(self, model_name: str = NER_MODEL):
@@ -32,8 +62,6 @@ class BioBERTExtractor:
     def extract_profile(self, patient_text: str) -> PatientProfile:
         entities = self.ner(patient_text)
 
-        # dslim/bert-base-NER labels: PER, ORG, LOC, MISC
-        # Medical conditions often surface as MISC; locations as LOC
         conditions = []
         ner_locations = []
 
@@ -63,19 +91,21 @@ class BioBERTExtractor:
         profile.missing_fields = profile.get_missing_critical_fields()
         return profile
 
-    # ------------------------------------------------------------------ #
-    # Rule-based extractors                                                #
-    # ------------------------------------------------------------------ #
-
     def _extract_age(self, text: str) -> Optional[int]:
-        for pattern in [
-            r"(\d+)[\s\-]*(year[s]?[\s\-]*old|yo\b|y\.o\.)",
-            r"age[d]?\s+(\d+)",
-            r"(\d+)[\s\-]*y/?o\b",
-        ]:
+        age_patterns = [
+            r"\b(\d{1,3})[- ]?year[s]?[- ]?old\b",   # 47-year-old, 47 year old
+            r"\bage[d]?\s*(?:is\s*)?(\d{1,3})\b",      # age 47, aged 47
+            r"\bI(?:\'m| am)\s+(\d{1,3})\b",           # I'm 47, I am 47
+            r"\b(\d{1,3})\s*yo\b",                      # 47yo
+            r"\bmy age is\s+(\d{1,3})\b",              # my age is 47
+            r"\b(\d{1,3})\s*years?\s+of\s+age\b",      # 47 years of age
+        ]
+        for pattern in age_patterns:
             m = re.search(pattern, text, re.IGNORECASE)
             if m:
-                return int(m.group(1))
+                age = int(m.group(1))
+                if 1 <= age <= 120:  # Sanity check
+                    return age
         return None
 
     def _extract_gender(self, text: str) -> Optional[str]:
@@ -87,24 +117,12 @@ class BioBERTExtractor:
         return None
 
     def _extract_medications(self, text: str) -> list:
-        # Named medication pattern — common drugs that appear in the test set
-        known_meds = [
-            r"metformin(?:\s+\d+\s*mg)?",
-            r"lisinopril(?:\s+\d+\s*mg)?",
-            r"atorvastatin(?:\s+\d+\s*mg)?",
-            r"adalimumab",
-            r"hydroxychloroquine",
-            r"carbidopa[\s\-]*levodopa",
-            r"carvedilol",
-            r"furosemide",
-            r"insulin\s+\w+",
-        ]
         found = []
-        for pattern in known_meds:
-            m = re.search(pattern, text, re.IGNORECASE)
-            if m:
-                found.append(m.group(0).strip())
-        return found
+        text_lower = text.lower()
+        for med in COMMON_MEDICATIONS:
+            if med.lower() in text_lower:
+                found.append(med)
+        return list(dict.fromkeys(found))  # Deduplicate while preserving order
 
     def _extract_lab_values(self, text: str) -> dict:
         labs = {}
@@ -112,6 +130,8 @@ class BioBERTExtractor:
             "HbA1c": r"hba1c\s+(?:of\s+|was\s+|is\s+)?([\d.]+\s*%?)",
             "BMI": r"bmi\s+(?:of\s+|is\s+|was\s+)?([\d.]+)",
             "ejection_fraction": r"ejection\s+fraction\s+(?:of\s+|is\s+|was\s+)?([\d.]+\s*%?)",
+            "eGFR": r"egfr\s+(?:of\s+|is\s+|was\s+)?([\d.]+)",
+            "glucose": r"(?:fasting\s+)?glucose\s+(?:of\s+|is\s+|was\s+)?([\d.]+)",
         }
         for name, pattern in patterns.items():
             m = re.search(pattern, text, re.IGNORECASE)

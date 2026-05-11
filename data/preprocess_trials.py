@@ -7,14 +7,35 @@ Usage:
 """
 import json
 import re
+import html as html_lib
 from pathlib import Path
 from typing import List, Dict
+
+BOILERPLATE_PHRASES = [
+    "ability to understand and sign informed consent",
+    "willingness to comply with study procedures",
+    "be able to provide written informed consent",
+    "no significant medical history",
+    "must be able to read and write",
+]
 
 
 def clean_text(text: str) -> str:
     if not text:
         return ""
+    # Remove HTML entities and tags
+    text = html_lib.unescape(text)
+    text = re.sub(r"<[^>]+>", "", text)
+    # Normalize unicode bullets to hyphens
+    text = re.sub(r"[•‣◦⁃∙–—]", "-", text)
+    # Normalize whitespace
     text = re.sub(r"\s+", " ", text)
+    return text.strip()
+
+
+def remove_boilerplate(text: str) -> str:
+    for phrase in BOILERPLATE_PHRASES:
+        text = re.sub(re.escape(phrase), "", text, flags=re.IGNORECASE)
     return text.strip()
 
 
@@ -61,12 +82,12 @@ def process_trial(raw_trial: dict) -> dict:
     intervention_names = [i.get("name", "") for i in interventions[:5]]
 
     raw_criteria = elig_mod.get("eligibilityCriteria", "")
-    parsed_criteria = parse_eligibility_criteria(raw_criteria)
+    clean_criteria = remove_boilerplate(clean_text(raw_criteria))
+    parsed_criteria = parse_eligibility_criteria(clean_criteria)
 
     title = id_mod.get("briefTitle", "")
     conditions = cond_mod.get("conditions", [])
     summary = clean_text(desc_mod.get("briefSummary", ""))
-    clean_criteria = clean_text(raw_criteria)
 
     return {
         "nct_id": id_mod.get("nctId", ""),
@@ -113,12 +134,41 @@ def preprocess_trials(
         except Exception as e:
             print(f"  Skipping trial: {e}")
 
+    # Deduplicate by NCT ID
+    seen_ids = set()
+    deduped = []
+    for trial in processed:
+        if trial["nct_id"] not in seen_ids:
+            seen_ids.add(trial["nct_id"])
+            deduped.append(trial)
+
     Path(output_path).parent.mkdir(parents=True, exist_ok=True)
     with open(output_path, "w") as f:
-        json.dump(processed, f, indent=2)
+        json.dump(deduped, f, indent=2)
 
-    print(f"Saved {len(processed)} processed trials to {output_path}")
-    return processed
+    # Data quality report
+    quality = {
+        "total_fetched": len(raw_trials),
+        "after_eligibility_filter": len(processed),
+        "duplicates_removed": len(processed) - len(deduped),
+        "final_count": len(deduped),
+        "missing_location": sum(1 for t in deduped if not t.get("locations")),
+        "missing_age_range": sum(1 for t in deduped if not t.get("min_age")),
+        "avg_eligibility_chars": (
+            int(sum(len(t.get("eligibility_raw", "")) for t in deduped) / len(deduped))
+            if deduped else 0
+        ),
+        "avg_inclusion_criteria": (
+            round(sum(len(t.get("inclusion_criteria", [])) for t in deduped) / len(deduped), 1)
+            if deduped else 0
+        ),
+    }
+
+    print("\n=== DATA QUALITY REPORT ===")
+    for k, v in quality.items():
+        print(f"  {k}: {v}")
+
+    return deduped
 
 
 if __name__ == "__main__":
