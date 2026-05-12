@@ -1,0 +1,50 @@
+PATIENT LAB REPORT
+==================
+Patient: John D. (Demo Patient)
+Date of Birth: 1962-03-15
+Report Date: 2026-04-22
+Ordering Physician: Dr. Sarah Mitchell, MD
+Lab: MedCore Diagnostics, Chicago IL
+
+COMPREHENSIVE METABOLIC PANEL
+------------------------------
+Glucose (Fasting)     182 mg/dL       [70-99]       HIGH
+BUN                    24 mg/dL       [7-25]        NORMAL
+Creatinine              1.4 mg/dL     [0.7-1.2]     HIGH
+eGFR                   52 mL/min      [>60]         LOW
+Sodium                141 mEq/L       [136-145]     NORMAL
+Potassium               4.2 mEq/L     [3.5-5.1]     NORMAL
+ALT                    48 U/L         [7-56]        NORMAL
+AST                    38 U/L         [10-40]       NORMAL
+
+LIPID PANEL
+-----------
+Total Cholesterol      228 mg/dL      [<200]        HIGH
+LDL Cholesterol        152 mg/dL      [<100]        HIGH
+HDL Cholesterol         38 mg/dL      [>40]         LOW
+Triglycerides          189 mg/dL      [<150]        HIGH
+
+DIABETES PANEL
+--------------
+HbA1c                   9.1 %         [4.0-5.6]     HIGH
+Fasting Insulin        18.2 uIU/mL    [2.6-24.9]    NORMAL
+
+COMPLETE BLOOD COUNT
+--------------------
+WBC                     7.2 K/uL      [4.5-11.0]    NORMAL
+Hemoglobin             13.8 g/dL      [13.5-17.5]   NORMAL
+Platelets              210 K/uL       [150-400]     NORMAL
+
+THYROID
+-------
+TSH                     3.2 mIU/L     [0.4-4.0]     NORMAL
+
+VITALS (recorded at visit)
+--------------------------
+BMI                    32.4 kg/m2
+Systolic BP           144 mmHg
+Diastolic BP           88 mmHg
+
+NOTES: Patient reports fatigue, frequent urination, increased thirst,
+blurred vision. Currently on metformin 1000mg twice daily.
+Follow-up in 3 months.

@@ -1,6 +1,7 @@
 """
 Problem 2 Champion: Semantic RAG retrieval using FAISS + sentence-transformers.
 """
+
 import pickle
 import numpy as np
 from typing import List, Dict

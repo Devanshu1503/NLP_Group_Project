@@ -2,9 +2,6 @@
 Evaluate retrieval pipeline (Problem 2): Semantic RAG vs Keyword search.
 Metrics: Precision@K, MRR (Mean Reciprocal Rank).
 
-Relevance is condition-based: a trial is "relevant" if its title or
-eligibility text contains keywords from the patient's conditions.
-
 Usage:
     python evaluation/eval_retrieval.py
 """
@@ -46,12 +43,18 @@ def evaluate_retrieval(
     with open(test_path) as f:
         test_cases = json.load(f)
 
-    if method == "semantic":
-        from retrieval.retriever_semantic import SemanticRetriever
-        retriever = SemanticRetriever()
-    else:
-        from retrieval.retriever_keyword import KeywordRetriever
-        retriever = KeywordRetriever()
+    print(f"\nRunning {method.upper()} retrieval on {len(test_cases)} patients...")
+
+    try:
+        if method == "semantic":
+            from retrieval.retriever_semantic import SemanticRetriever
+            retriever = SemanticRetriever()
+        else:
+            from retrieval.retriever_keyword import KeywordRetriever
+            retriever = KeywordRetriever()
+    except Exception as e:
+        print(f"  ERROR loading retriever: {e}")
+        return {"method": method, "error": str(e), "precision_at_5": 0, "mrr": 0}
 
     p_at_k_scores = []
     mrr_scores = []
@@ -59,17 +62,21 @@ def evaluate_retrieval(
     for case in test_cases:
         conditions = case["ground_truth"].get("conditions", [])
         if not conditions:
-            continue  # Skip healthy volunteers for retrieval eval
+            continue
 
-        profile = extract_profile_llm(case["description"])
-        results = retriever.retrieve(profile, top_k=top_k)
+        try:
+            profile = extract_profile_llm(case["description"])
+            results = retriever.retrieve(profile, top_k=top_k)
 
-        p = precision_at_k(results, conditions, k=top_k)
-        m = mean_reciprocal_rank(results, conditions)
+            p = precision_at_k(results, conditions, k=top_k)
+            m = mean_reciprocal_rank(results, conditions)
 
-        p_at_k_scores.append(p)
-        mrr_scores.append(m)
-        print(f"  {case['id']}: P@{top_k}={p:.3f}  MRR={m:.3f}")
+            p_at_k_scores.append(p)
+            mrr_scores.append(m)
+            print(f"  {case['id']}: P@{top_k}={p:.3f}  MRR={m:.3f}")
+
+        except Exception as e:
+            print(f"  ERROR on {case['id']}: {e}")
 
     n = len(p_at_k_scores)
     summary = {
@@ -79,11 +86,26 @@ def evaluate_retrieval(
         "mrr": sum(mrr_scores) / n if n else 0.0,
     }
 
-    print(f"\n=== Retrieval Evaluation: {method.upper()} ===")
-    for k, v in summary.items():
-        print(f"  {k}: {v:.3f}" if isinstance(v, float) else f"  {k}: {v}")
-
     return summary
+
+
+def print_retrieval_comparison(semantic_results: dict, keyword_results: dict):
+    print("\n" + "=" * 55)
+    print(f"{'Metric':<25} {'Semantic RAG':>14} {'Keyword':>10}")
+    print("=" * 55)
+    for metric in ["precision_at_5", "mrr"]:
+        s = semantic_results.get(metric, 0)
+        k = keyword_results.get(metric, 0)
+        if s > k:
+            winner = " ← RAG"
+        elif k > s:
+            winner = " ← KW"
+        else:
+            winner = " TIE"
+        print(f"{metric:<25} {s:>13.3f} {k:>9.3f}{winner}")
+    print("=" * 55)
+    print("\nNote: Semantic RAG uses FAISS vector similarity.")
+    print("Keyword uses ClinicalTrials.gov native search — the patient status quo.")
 
 
 if __name__ == "__main__":
@@ -93,9 +115,4 @@ if __name__ == "__main__":
     print("\nEvaluating keyword retrieval (baseline)...")
     keyword = evaluate_retrieval(method="keyword")
 
-    print("\n=== Comparison ===")
-    for metric in [f"precision_at_5", "mrr"]:
-        s_val = semantic.get(metric, 0)
-        k_val = keyword.get(metric, 0)
-        winner = "Semantic" if s_val >= k_val else "Keyword"
-        print(f"  {metric}: Semantic={s_val:.3f}  Keyword={k_val:.3f}  → {winner} wins")
+    print_retrieval_comparison(semantic, keyword)

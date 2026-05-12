@@ -17,6 +17,9 @@ seqeval>=1.2.2
 sentence-transformers>=3.0.0
 faiss-cpu>=1.8.0
 
+# PDF Parsing
+pymupdf>=1.24.0
+
 # Data & Analysis
 requests>=2.32.0
 pandas>=2.2.0

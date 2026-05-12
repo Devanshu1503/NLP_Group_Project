@@ -172,7 +172,7 @@
         }
 
         /* ── NER COMPARISON VIEW ─────────────────────────────────────────── */
-        #ner-view {
+        #view-ner {
             overflow-y: auto;
             padding: 28px 24px;
             gap: 0;
@@ -286,6 +286,7 @@
     <nav class="tabs">
         <button class="tab-btn active" onclick="switchTab('chat', this)">💬 Chat</button>
         <button class="tab-btn" onclick="switchTab('ner', this)">🔬 NER Comparison</button>
+        <button class="tab-btn" onclick="switchTab('lab', this)">🧪 Lab Report</button>
     </nav>
 
     <button class="new-btn" id="new-btn" onclick="newChat()">+ New Conversation</button>
@@ -360,6 +361,90 @@
 
         </div>
     </div>
+</div>
+
+<!-- ── LAB REPORT VIEW ────────────────────────────────────────────────── -->
+<div class="view" id="view-lab" style="overflow-y:auto; padding:28px 24px;">
+  <div style="max-width:860px; margin:0 auto; display:flex; flex-direction:column; gap:20px;">
+
+    <!-- Upload card -->
+    <div style="background:white; border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,.08); padding:24px;">
+      <h2 style="font-size:15px; font-weight:600; color:#111827; margin-bottom:16px;">Upload Lab Report</h2>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+        <div>
+          <label style="font-size:13px; font-weight:500; color:#374151; display:block; margin-bottom:6px;">Upload PDF</label>
+          <input type="file" id="lab-file" accept=".pdf"
+            style="width:100%; font-size:13px; border:1px solid #e5e7eb; border-radius:8px; padding:8px 10px; background:#f9fafb; cursor:pointer;" />
+        </div>
+        <div>
+          <label style="font-size:13px; font-weight:500; color:#374151; display:block; margin-bottom:6px;">Or paste lab text</label>
+          <textarea id="lab-text" placeholder="Paste raw lab values here…"
+            style="width:100%; height:80px; border:1px solid #e5e7eb; border-radius:8px; padding:8px 10px; font-size:13px; font-family:inherit; resize:vertical; background:#f9fafb;"></textarea>
+        </div>
+      </div>
+
+      <div style="margin-top:14px;">
+        <label style="font-size:13px; font-weight:500; color:#374151; display:block; margin-bottom:6px;">Symptoms (comma-separated, optional)</label>
+        <input type="text" id="lab-symptoms" placeholder="e.g. fatigue, frequent urination, blurred vision"
+          style="width:100%; border:1px solid #e5e7eb; border-radius:8px; padding:9px 12px; font-size:13px; font-family:inherit; background:#f9fafb;" />
+      </div>
+
+      <div style="margin-top:16px; display:flex; align-items:center; gap:14px;">
+        <button id="lab-btn" onclick="analyzeReport()"
+          style="background:#2563eb; color:white; border:none; border-radius:8px; padding:10px 22px; font-size:13.5px; font-weight:600; cursor:pointer;">
+          Analyze Report
+        </button>
+        <span id="lab-status" style="font-size:13px; color:#6b7280;"></span>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div id="lab-results" style="display:none; flex-direction:column; gap:16px;">
+
+      <!-- Biomarkers table -->
+      <div style="background:white; border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,.08); padding:20px 24px;">
+        <h3 style="font-size:14px; font-weight:600; color:#111827; margin-bottom:14px;">Biomarker Results</h3>
+        <div id="lab-biomarkers-table"></div>
+      </div>
+
+      <!-- Interpretation -->
+      <div style="background:white; border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,.08); padding:20px 24px;">
+        <h3 style="font-size:14px; font-weight:600; color:#111827; margin-bottom:12px;">Biomarker Interpretation</h3>
+        <ol id="lab-interpretation" style="padding-left:18px; font-size:13.5px; line-height:1.7; color:#374151;"></ol>
+      </div>
+
+      <!-- Suggested conditions -->
+      <div style="background:white; border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,.08); padding:20px 24px;">
+        <h3 style="font-size:14px; font-weight:600; color:#111827; margin-bottom:14px;">Suggested Conditions</h3>
+        <div id="lab-conditions" style="display:flex; flex-direction:column; gap:12px;"></div>
+      </div>
+
+      <!-- Trial-relevant values -->
+      <div style="background:white; border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,.08); padding:20px 24px;">
+        <h3 style="font-size:14px; font-weight:600; color:#111827; margin-bottom:10px;">Trial-Relevant Findings</h3>
+        <ul id="lab-trial-values" style="padding-left:18px; font-size:13.5px; line-height:1.7; color:#374151;"></ul>
+      </div>
+
+      <!-- Reasoning summary -->
+      <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:20px 24px;">
+        <h3 style="font-size:14px; font-weight:600; color:#111827; margin-bottom:10px;">Summary</h3>
+        <p id="lab-summary" style="font-size:13.5px; line-height:1.75; color:#374151;"></p>
+      </div>
+
+      <!-- Physician note -->
+      <div style="background:#fffbeb; border:1px solid #fcd34d; border-radius:12px; padding:16px 20px;">
+        <p id="lab-physician-note" style="font-size:13px; color:#92400e; line-height:1.6;"></p>
+      </div>
+
+      <!-- CTA button -->
+      <button onclick="goToTrialChat()"
+        style="background:#16a34a; color:white; border:none; border-radius:10px; padding:13px 24px; font-size:14px; font-weight:600; cursor:pointer; align-self:flex-start;">
+        🔍 Find Matching Trials Based on These Results
+      </button>
+
+    </div>
+  </div>
 </div>
 
 <script>
@@ -626,6 +711,123 @@ async function runComparison() {
     } finally {
         btn.disabled = false;
     }
+}
+
+// ── Lab Report ────────────────────────────────────────────────────────────
+let labSessionId = null;
+let labSuggestedConditions = [];
+
+async function analyzeReport() {
+    const fileInput   = document.getElementById('lab-file');
+    const labText     = document.getElementById('lab-text').value.trim();
+    const symptoms    = document.getElementById('lab-symptoms').value.trim();
+    const btn         = document.getElementById('lab-btn');
+    const status      = document.getElementById('lab-status');
+
+    if (!fileInput.files.length && !labText) {
+        status.textContent = 'Please upload a PDF or paste lab text.';
+        return;
+    }
+
+    btn.disabled = true;
+    status.textContent = 'Analyzing…';
+    document.getElementById('lab-results').style.display = 'none';
+
+    try {
+        const formData = new FormData();
+        if (fileInput.files.length) formData.append('file', fileInput.files[0]);
+        if (labText)               formData.append('lab_text', labText);
+        if (symptoms)              formData.append('symptoms', symptoms);
+        if (labSessionId)          formData.append('session_id', labSessionId);
+
+        const res  = await fetch('/analyze-report', { method: 'POST', body: formData });
+        const data = await res.json();
+
+        if (data.error) { status.textContent = `Error: ${data.error}`; return; }
+
+        labSessionId = data.session_id;
+        labSuggestedConditions = (data.suggested_conditions || []).map(c => c.condition);
+
+        status.textContent = `Found ${data.biomarkers_found} biomarker${data.biomarkers_found !== 1 ? 's' : ''}`;
+
+        // Biomarkers table
+        const statusColor = { HIGH: '#fef2f2', LOW: '#eff6ff', NORMAL: '#f0fdf4', UNKNOWN: '#f9fafb' };
+        const statusText  = { HIGH: '#991b1b', LOW: '#1e40af', NORMAL: '#166534', UNKNOWN: '#6b7280' };
+        let tableHtml = `<table style="width:100%;border-collapse:collapse;font-size:13px;">
+            <thead><tr style="background:#f9fafb;">
+                <th style="padding:8px 12px;text-align:left;font-weight:600;color:#374151;border-bottom:1px solid #e5e7eb;">Biomarker</th>
+                <th style="padding:8px 12px;text-align:left;font-weight:600;color:#374151;border-bottom:1px solid #e5e7eb;">Value</th>
+                <th style="padding:8px 12px;text-align:left;font-weight:600;color:#374151;border-bottom:1px solid #e5e7eb;">Unit</th>
+                <th style="padding:8px 12px;text-align:left;font-weight:600;color:#374151;border-bottom:1px solid #e5e7eb;">Ref Range</th>
+                <th style="padding:8px 12px;text-align:left;font-weight:600;color:#374151;border-bottom:1px solid #e5e7eb;">Status</th>
+            </tr></thead><tbody>`;
+        for (const [name, info] of Object.entries(data.biomarkers)) {
+            const s   = info.status || 'UNKNOWN';
+            const bg  = statusColor[s] || '#f9fafb';
+            const col = statusText[s]  || '#374151';
+            tableHtml += `<tr style="background:${bg};">
+                <td style="padding:8px 12px;font-weight:500;color:#111827;">${name}</td>
+                <td style="padding:8px 12px;">${info.value || '—'}</td>
+                <td style="padding:8px 12px;color:#6b7280;">${info.unit || '—'}</td>
+                <td style="padding:8px 12px;color:#6b7280;">${info.reference_range || '—'}</td>
+                <td style="padding:8px 12px;font-weight:600;color:${col};">${s}</td>
+            </tr>`;
+        }
+        tableHtml += '</tbody></table>';
+        document.getElementById('lab-biomarkers-table').innerHTML = data.biomarkers_found ? tableHtml : '<p style="color:#6b7280;font-size:13px;">No biomarkers extracted.</p>';
+
+        // Interpretation list
+        const interp = document.getElementById('lab-interpretation');
+        interp.innerHTML = (data.biomarker_interpretation || [])
+            .map(i => `<li style="margin-bottom:6px;"><strong>${i.biomarker}:</strong> ${i.finding} — <em>${i.clinical_significance}</em></li>`)
+            .join('') || '<li>No interpretation available.</li>';
+
+        // Suggested conditions
+        const condEl = document.getElementById('lab-conditions');
+        const confColor = { high: '#dcfce7', medium: '#fef9c3', low: '#f3f4f6' };
+        const confText  = { high: '#166534', medium: '#854d0e', low: '#6b7280' };
+        condEl.innerHTML = (data.suggested_conditions || []).map(c => {
+            const cc = (c.confidence || 'low').toLowerCase();
+            return `<div style="border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+                    <span style="font-weight:600;font-size:14px;color:#111827;">${c.condition}</span>
+                    <span style="background:${confColor[cc]||'#f3f4f6'};color:${confText[cc]||'#374151'};font-size:11px;font-weight:700;padding:2px 8px;border-radius:100px;">${c.confidence?.toUpperCase()}</span>
+                </div>
+                <div style="font-size:12.5px;color:#6b7280;margin-bottom:4px;">Biomarkers: ${(c.supporting_biomarkers||[]).join(', ')||'—'}</div>
+                <div style="font-size:12.5px;color:#6b7280;">Symptoms: ${(c.supporting_symptoms||[]).join(', ')||'None reported'}</div>
+            </div>`;
+        }).join('') || '<p style="color:#6b7280;font-size:13px;">No conditions suggested.</p>';
+
+        // Trial-relevant values
+        const tvEl = document.getElementById('lab-trial-values');
+        tvEl.innerHTML = (data.trial_relevant_values || []).map(v => `<li style="margin-bottom:4px;">${v}</li>`).join('') || '<li>None identified.</li>';
+
+        // Summary + physician note
+        document.getElementById('lab-summary').textContent        = data.reasoning_summary || 'No summary available.';
+        document.getElementById('lab-physician-note').textContent  = data.physician_note   || '';
+
+        document.getElementById('lab-results').style.display = 'flex';
+
+    } catch (err) {
+        status.textContent = `Error: ${err.message}`;
+    } finally {
+        btn.disabled = false;
+    }
+}
+
+function goToTrialChat() {
+    // Switch to chat tab
+    const chatBtn = document.querySelector('.tab-btn');
+    switchTab('chat', chatBtn);
+
+    // Build pre-filled message from lab findings
+    const condStr = labSuggestedConditions.length
+        ? labSuggestedConditions.join(', ')
+        : 'conditions from my lab report';
+    const msg = `I just uploaded my lab report. Based on the analysis, I may have: ${condStr}. Can you help me find clinical trials that match these findings?`;
+
+    document.getElementById('user-input').value = msg;
+    document.getElementById('user-input').focus();
 }
 </script>
 </body>

@@ -18,6 +18,7 @@ def fetch_trials(
     max_trials: int = 500,
     status: str = "RECRUITING",
     output_path: str = "data/raw_trials.json",
+    country: str = None,
 ):
     all_trials = []
     next_page_token = None
@@ -31,8 +32,12 @@ def fetch_trials(
     }
     if condition:
         params["query.cond"] = condition
+    if country:
+        params["query.locn"] = country
 
-    print(f"Fetching up to {max_trials} {status} trials" + (f" for '{condition}'" if condition else "") + "...")
+    label = f"for '{condition}'" if condition else ""
+    label += f" in {country}" if country else ""
+    print(f"Fetching up to {max_trials} {status} trials {label}...".strip())
 
     while len(all_trials) < max_trials:
         if next_page_token:
@@ -66,7 +71,5 @@ def fetch_trials(
 
 
 if __name__ == "__main__":
-    # Focused set for fast development
     fetch_trials(condition="diabetes", max_trials=200, output_path="data/raw_trials_diabetes.json")
-    # General sample for full pipeline
     fetch_trials(max_trials=500, output_path="data/raw_trials.json")
