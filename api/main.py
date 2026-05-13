@@ -25,6 +25,7 @@ from pydantic import BaseModel
 from agents.conversation_agent import ConversationAgent
 from retrieval.retriever_keyword import KeywordRetriever
 from agents.explainer_agent import explain_trials
+from ner.schemas import PatientProfile
 
 # Loaded lazily at startup — requires FAISS index to exist
 semantic_retriever = None
@@ -43,7 +44,7 @@ async def lifespan(app: FastAPI):
         semantic_retriever = SemanticRetriever()
         print("Semantic retriever loaded.")
     except Exception as e:
-        print(f"Warning: semantic retriever unavailable ({e}). Run retrieval/embed_trials.py first.")
+        print(f"Warning: semantic retriever unavailable ({e}). Run data/ingest_qdrant.py first.")
     try:
         from ner.ner_bioBERT import BioBERTExtractor
         bioBERT_extractor = BioBERTExtractor()
@@ -178,5 +179,57 @@ async def health():
     return {
         "status": "ok",
         "semantic_retriever": semantic_retriever is not None,
-        "index_size": semantic_retriever.index.ntotal if semantic_retriever else 0,
+        "collection_size": semantic_retriever.collection_size if semantic_retriever else 0,
     }
+
+
+class TrialCompareRequest(BaseModel):
+    query: str
+    top_k: int = 5
+
+
+@app.post("/compare-trials")
+async def compare_trials(request: TrialCompareRequest):
+    import time
+    results = {}
+
+    # Semantic RAG via Qdrant
+    t0 = time.time()
+    if semantic_retriever:
+        try:
+            rag_trials = semantic_retriever.retrieve_raw(request.query, top_k=request.top_k)
+            results["semantic"] = {
+                "trials": rag_trials,
+                "time_seconds": round(time.time() - t0, 2),
+                "error": None,
+            }
+        except Exception as e:
+            results["semantic"] = {
+                "trials": [],
+                "time_seconds": round(time.time() - t0, 2),
+                "error": str(e),
+            }
+    else:
+        results["semantic"] = {
+            "trials": [],
+            "time_seconds": 0,
+            "error": "Semantic retriever not loaded. Run data/ingest_qdrant.py first.",
+        }
+
+    # Keyword baseline via ClinicalTrials.gov API (full-text query.term search)
+    t0 = time.time()
+    try:
+        kw_trials  = keyword_retriever.retrieve_raw(request.query, top_k=request.top_k)
+        results["keyword"] = {
+            "trials": kw_trials,
+            "time_seconds": round(time.time() - t0, 2),
+            "error": None,
+        }
+    except Exception as e:
+        results["keyword"] = {
+            "trials": [],
+            "time_seconds": round(time.time() - t0, 2),
+            "error": str(e),
+        }
+
+    return results
