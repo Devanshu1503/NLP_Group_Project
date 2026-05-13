@@ -37,8 +37,8 @@ cp .env.example .env
 Run these once in order before starting the API or evaluations:
 
 ```bash
-# 1. Fetch trials from ClinicalTrials.gov (free, no API key needed)
-python data/fetch_trials.py
+# 1. Fetch trials from ClinicalTrials.gov and ingest them into qdrant database
+python data/ingest_qdrant.py
 
 # 2. Clean and structure the raw data
 python data/preprocess_trials.py
