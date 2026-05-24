@@ -61,7 +61,7 @@ def extract_from_text(text: str) -> dict:
 def _call_llm(text: str) -> dict:
     response = client.messages.create(
         model="claude-sonnet-4-6",
-        max_tokens=1500,
+        max_tokens=4096,
         system=[{"type": "text", "text": SYSTEM_PROMPT, "cache_control": {"type": "ephemeral"}}],
         messages=[{"role": "user", "content": f"Extract biomarkers from this lab report:\n\n{text[:8000]}"}],
     )

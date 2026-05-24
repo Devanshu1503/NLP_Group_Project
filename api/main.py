@@ -200,10 +200,16 @@ async def analyze_report(
     else:
         return {"error": "Provide either a PDF file or lab_text"}
 
+    if biomarker_data.get("error"):
+        return {"error": biomarker_data["error"], "biomarkers_found": 0, "biomarkers": {}}
+
     biomarkers = biomarker_data.get("biomarkers", {})
     symptom_list = [s.strip() for s in symptoms.split(",") if s.strip()]
 
     diagnosis = diagnostic_agent.reason(biomarkers=biomarkers, symptoms=symptom_list)
+
+    if diagnosis.get("error"):
+        print(f"[diagnostic_agent] ERROR: {diagnosis['error']}")
 
     # Inject biomarker context into existing session if present
     if session_id in sessions and biomarkers and not diagnosis.get("error"):
