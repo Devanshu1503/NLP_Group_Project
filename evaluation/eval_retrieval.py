@@ -12,10 +12,19 @@ from ner.ner_llm import extract_profile_llm
 
 
 def is_relevant(trial: Dict, conditions: List[str]) -> bool:
-    """A trial is relevant if any condition keyword appears in its text."""
+    """A trial is relevant if any condition phrase (or a meaningful root) appears in its text.
+    Uses full-phrase matching first, then falls back to the longest word (>=6 chars) in the phrase
+    to avoid false positives from short words like 'type', '2', 'of'.
+    """
     text = (trial.get("title", "") + " " + trial.get("eligibility_raw", "")).lower()
     for cond in conditions:
-        if any(kw in text for kw in cond.lower().split()):
+        cond_lower = cond.lower()
+        # First try: exact full phrase
+        if cond_lower in text:
+            return True
+        # Second try: longest meaningful word in the phrase (avoids "type", "2", "of")
+        words = [w for w in cond_lower.split() if len(w) >= 6]
+        if words and any(w in text for w in words):
             return True
     return False
 
@@ -35,10 +44,24 @@ def mean_reciprocal_rank(results: List[Dict], conditions: List[str]) -> float:
     return 0.0
 
 
+def recall_at_k(results: List[Dict], conditions: List[str], k: int = 10) -> float:
+    top_k = results[:k]
+    # Count unique condition keywords found across top-k results
+    found = set()
+    for trial in top_k:
+        text = (trial.get("title", "") + " " + trial.get("eligibility_raw", "")).lower()
+        for cond in conditions:
+            if any(kw in text for kw in cond.lower().split()):
+                found.add(cond.lower())
+    if not conditions:
+        return 0.0
+    return len(found) / len(conditions)
+
+
 def evaluate_retrieval(
     test_path: str = "evaluation/test_patients.json",
     method: str = "semantic",
-    top_k: int = 5,
+    top_k: int = 10,
 ) -> dict:
     with open(test_path) as f:
         test_cases = json.load(f)
@@ -57,6 +80,7 @@ def evaluate_retrieval(
         return {"method": method, "error": str(e), "precision_at_5": 0, "mrr": 0}
 
     p_at_k_scores = []
+    recall_scores = []
     mrr_scores = []
 
     for case in test_cases:
@@ -68,12 +92,14 @@ def evaluate_retrieval(
             profile = extract_profile_llm(case["description"])
             results = retriever.retrieve(profile, top_k=top_k)
 
-            p = precision_at_k(results, conditions, k=top_k)
+            p = precision_at_k(results, conditions, k=5)
+            r = recall_at_k(results, conditions, k=10)
             m = mean_reciprocal_rank(results, conditions)
 
             p_at_k_scores.append(p)
+            recall_scores.append(r)
             mrr_scores.append(m)
-            print(f"  {case['id']}: P@{top_k}={p:.3f}  MRR={m:.3f}")
+            print(f"  {case['id']}: P@5={p:.3f}  R@10={r:.3f}  MRR={m:.3f}")
 
         except Exception as e:
             print(f"  ERROR on {case['id']}: {e}")
@@ -82,7 +108,8 @@ def evaluate_retrieval(
     summary = {
         "method": method,
         "total_cases": n,
-        f"precision_at_{top_k}": sum(p_at_k_scores) / n if n else 0.0,
+        "precision_at_5": sum(p_at_k_scores) / n if n else 0.0,
+        "recall_at_10": sum(recall_scores) / n if n else 0.0,
         "mrr": sum(mrr_scores) / n if n else 0.0,
     }
 
@@ -93,13 +120,13 @@ def print_retrieval_comparison(semantic_results: dict, keyword_results: dict):
     print("\n" + "=" * 55)
     print(f"{'Metric':<25} {'Semantic RAG':>14} {'Keyword':>10}")
     print("=" * 55)
-    for metric in ["precision_at_5", "mrr"]:
+    for metric in ["precision_at_5", "recall_at_10", "mrr"]:
         s = semantic_results.get(metric, 0)
         k = keyword_results.get(metric, 0)
         if s > k:
-            winner = " ← RAG"
+            winner = " <- RAG"
         elif k > s:
-            winner = " ← KW"
+            winner = " <- KW"
         else:
             winner = " TIE"
         print(f"{metric:<25} {s:>13.3f} {k:>9.3f}{winner}")

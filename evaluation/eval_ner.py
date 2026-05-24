@@ -91,8 +91,8 @@ def evaluate_extraction(
         true_meds = {m.lower() for m in truth.get("medications", [])}
         medication_f1s.append(compute_f1(pred_meds, true_meds))
 
-        print(f"  [{i+1}] {patient['id']} — "
-              f"age={'✓' if pred.age == truth.get('age') else '✗'} "
+        age_ok = "OK" if pred.age == truth.get("age") else "XX"
+        print(f"  [{i+1}] {patient['id']} age={age_ok} "
               f"cond_f1={condition_f1s[-1]:.2f} "
               f"med_f1={medication_f1s[-1]:.2f} "
               f"({elapsed_ms:.0f}ms)")
@@ -120,9 +120,9 @@ def print_comparison_table(llm_results: dict, bert_results: dict):
         llm_val = llm_results.get(m, 0)
         bert_val = bert_results.get(m, 0)
         if llm_val > bert_val:
-            winner = " ← LLM"
+            winner = " <- LLM"
         elif bert_val > llm_val:
-            winner = " ← BERT"
+            winner = " <- BERT"
         else:
             winner = " TIE"
         print(f"{m:<25} {llm_val:>11.3f} {bert_val:>11.3f}{winner}")
