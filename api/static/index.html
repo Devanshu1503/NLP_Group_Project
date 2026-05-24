@@ -187,24 +187,24 @@
         }
         .ner-input-card h2 { font-size: 15px; font-weight: 600; color: #111827; margin-bottom: 12px; }
 
-        #ner-text {
+        #ner-text, #trials-text {
             width: 100%; border: 1px solid #e5e7eb; border-radius: 10px;
             padding: 12px 14px; font-size: 14px; font-family: inherit;
             resize: vertical; min-height: 100px; color: #111827;
             background: #f9fafb; outline: none; line-height: 1.6;
             transition: border-color 0.15s, background 0.15s;
         }
-        #ner-text:focus { border-color: #2563eb; background: white; }
+        #ner-text:focus, #trials-text:focus { border-color: #2563eb; background: white; }
 
         .ner-actions { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
-        #compare-btn {
+        #compare-btn, #trials-compare-btn {
             background: #2563eb; color: white; border: none;
             padding: 10px 22px; border-radius: 9px;
             font-size: 14px; font-weight: 500; cursor: pointer;
             transition: background 0.12s;
         }
-        #compare-btn:hover    { background: #1d4ed8; }
-        #compare-btn:disabled { background: #93c5fd; cursor: not-allowed; }
+        #compare-btn:hover,    #trials-compare-btn:hover    { background: #1d4ed8; }
+        #compare-btn:disabled, #trials-compare-btn:disabled { background: #93c5fd; cursor: not-allowed; }
 
         .ner-status { font-size: 13px; color: #6b7280; }
 
@@ -270,6 +270,68 @@
             background: #fffbeb; border: 1px solid #fde68a;
             border-radius: 2px; flex-shrink: 0;
         }
+
+        /* ── TRIAL COMPARISON VIEW ───────────────────────────────────────── */
+        #view-trials { overflow-y: auto; }
+
+        .trials-legend {
+            display: flex; align-items: center; gap: 16px;
+            font-size: 12px; flex-wrap: wrap;
+        }
+        .trials-legend-item { display: flex; align-items: center; gap: 5px; }
+        .tleg-dot {
+            width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0;
+        }
+        .tleg-both   { background: #fef3c7; border: 1px solid #fde68a; }
+        .tleg-left   { background: #eff6ff; border: 1px solid #bfdbfe; }
+        .tleg-right  { background: #f0fdf4; border: 1px solid #bbf7d0; }
+
+        .trial-list { padding: 0 18px 18px; display: flex; flex-direction: column; gap: 10px; }
+
+        .trial-card {
+            border: 1px solid #e5e7eb; border-radius: 10px;
+            padding: 13px 15px; font-size: 13px; background: white;
+        }
+        .trial-card.tc-both  { background: #fffbeb; border-color: #fde68a; }
+        .trial-card.tc-left  { background: #eff6ff; border-color: #bfdbfe; }
+        .trial-card.tc-right { background: #f0fdf4; border-color: #bbf7d0; }
+
+        .tc-header {
+            display: flex; align-items: center; gap: 6px;
+            flex-wrap: wrap; margin-bottom: 6px;
+        }
+        .tc-nct   { font-size: 11px; color: #6b7280; font-family: monospace; }
+        .tc-badge {
+            font-size: 11px; font-weight: 600;
+            padding: 1px 8px; border-radius: 100px;
+        }
+        .tc-phase  { background: #eff6ff; color: #1d4ed8; }
+        .tc-status { background: #f0fdf4; color: #166534; }
+        .tc-both-badge { background: #fef3c7; color: #92400e; }
+
+        .tc-title {
+            font-size: 13.5px; font-weight: 600; color: #111827;
+            margin-bottom: 5px; line-height: 1.35;
+        }
+        .tc-title a { color: inherit; text-decoration: none; }
+        .tc-title a:hover { text-decoration: underline; }
+
+        .tc-score  { font-size: 12px; color: #6b7280; margin-bottom: 6px; }
+        .tc-snippet {
+            font-size: 12px; color: #4b5563; background: rgba(0,0,0,0.03);
+            border-left: 3px solid #d1d5db; border-radius: 0 5px 5px 0;
+            padding: 7px 10px; line-height: 1.5; margin-bottom: 5px;
+        }
+        .tc-conditions { font-size: 11.5px; color: #6b7280; }
+
+        .tc-empty {
+            padding: 28px 18px; text-align: center;
+            font-size: 13px; color: #9ca3af; font-style: italic;
+        }
+        .tc-error {
+            padding: 14px 18px; background: #fef2f2;
+            color: #991b1b; font-size: 13px; border-radius: 8px; margin: 12px 18px 0;
+        }
     </style>
 </head>
 <body>
@@ -287,6 +349,7 @@
         <button class="tab-btn active" onclick="switchTab('chat', this)">💬 Chat</button>
         <button class="tab-btn" onclick="switchTab('ner', this)">🔬 NER Comparison</button>
         <button class="tab-btn" onclick="switchTab('lab', this)">🧪 Lab Report</button>
+        <button class="tab-btn" onclick="switchTab('trials', this)">⚖️ Trial Retrieval Comparison</button>
     </nav>
 
     <button class="new-btn" id="new-btn" onclick="newChat()">+ New Conversation</button>
@@ -445,6 +508,57 @@
 
     </div>
   </div>
+</div>
+
+<!-- ── TRIAL COMPARISON VIEW ──────────────────────────────────────────── -->
+<div class="view" id="view-trials">
+    <div class="ner-wrap">
+
+        <div class="ner-input-card">
+            <h2>Trial Query</h2>
+            <textarea id="trials-text" placeholder="Enter a condition or clinical query…">Type 2 diabetes with early-stage kidney disease</textarea>
+            <div class="ner-actions">
+                <button id="trials-compare-btn" onclick="runTrialComparison()">Compare Retrieval Methods</button>
+                <div class="trials-legend">
+                    <div class="trials-legend-item">
+                        <div class="tleg-dot tleg-both"></div>
+                        <span style="color:#92400e">In both results</span>
+                    </div>
+                    <div class="trials-legend-item">
+                        <div class="tleg-dot tleg-left"></div>
+                        <span style="color:#1d4ed8">Semantic only</span>
+                    </div>
+                    <div class="trials-legend-item">
+                        <div class="tleg-dot tleg-right"></div>
+                        <span style="color:#166534">Keyword only</span>
+                    </div>
+                </div>
+                <span class="ner-status" id="trials-status"></span>
+            </div>
+        </div>
+
+        <div class="ner-results" id="trials-results" style="display:none;">
+
+            <div class="model-card" id="trials-semantic-card">
+                <div class="model-header">
+                    <h3>🧠 Semantic RAG (Qdrant)</h3>
+                    <span class="model-badge badge-llm">sentence-transformers</span>
+                </div>
+                <div class="meta-row" id="trials-semantic-meta"></div>
+                <div class="trial-list" id="trials-semantic-body"></div>
+            </div>
+
+            <div class="model-card" id="trials-keyword-card">
+                <div class="model-header">
+                    <h3>🔍 Keyword Baseline (CT.gov API)</h3>
+                    <span class="model-badge badge-bert">BM25 / CT.gov</span>
+                </div>
+                <div class="meta-row" id="trials-keyword-meta"></div>
+                <div class="trial-list" id="trials-keyword-body"></div>
+            </div>
+
+        </div>
+    </div>
 </div>
 
 <script>
@@ -811,16 +925,142 @@ async function analyzeReport() {
     } catch (err) {
         status.textContent = `Error: ${err.message}`;
     } finally {
+        document.getElementById('lab-btn').disabled = false;
+    }
+}
+
+// ── Trial Retrieval Comparison ────────────────────────────────────────────
+function trialCardClass(nctId, overlapSet) {
+    return overlapSet.has(nctId) ? 'tc-both' : '';
+}
+
+function renderPhase(phase) {
+    if (!phase || !phase.length) return '';
+    return `<span class="tc-badge tc-phase">${phase.join(', ')}</span>`;
+}
+
+function renderStatus(status) {
+    if (!status) return '';
+    return `<span class="tc-badge tc-status">${status}</span>`;
+}
+
+function renderScore(trial, method) {
+    if (method === 'semantic' && trial.similarity_score != null) {
+        return `<div class="tc-score">Relevance score: ${trial.similarity_score.toFixed(3)}</div>`;
+    }
+    return '';
+}
+
+function renderSnippet(trial, method) {
+    let text = '';
+    if (method === 'semantic' && trial.chunk_text) {
+        text = trial.chunk_text;
+    } else if (trial.summary) {
+        text = trial.summary.slice(0, 300);
+    } else if (trial.eligibility_raw) {
+        text = trial.eligibility_raw.slice(0, 300);
+    }
+    if (!text) return '';
+    return `<div class="tc-snippet">${text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}…</div>`;
+}
+
+function buildTrialCard(trial, method, overlapSet) {
+    const nctId     = trial.nct_id || '';
+    const isShared  = overlapSet.has(nctId);
+    const cardClass = isShared ? 'tc-both' : (method === 'semantic' ? 'tc-left' : 'tc-right');
+    const titleHtml = trial.url
+        ? `<a href="${trial.url}" target="_blank" rel="noopener">${trial.title || nctId}</a>`
+        : (trial.title || nctId);
+
+    return `
+        <div class="trial-card ${cardClass}">
+            <div class="tc-header">
+                <span class="tc-nct">${nctId}</span>
+                ${renderPhase(trial.phase)}
+                ${renderStatus(trial.status)}
+                ${isShared ? '<span class="tc-badge tc-both-badge">✓ In Both</span>' : ''}
+            </div>
+            <div class="tc-title">${titleHtml}</div>
+            ${renderScore(trial, method)}
+            ${renderSnippet(trial, method)}
+            ${trial.conditions && trial.conditions.length
+                ? `<div class="tc-conditions">Conditions: ${trial.conditions.slice(0,4).join(', ')}</div>`
+                : ''}
+        </div>`;
+}
+
+function renderTrialPanel(trials, method, error, overlapSet, bodyEl, metaEl) {
+    if (error) {
+        bodyEl.innerHTML = `<div class="tc-error">Error: ${error}</div>`;
+        metaEl.innerHTML = '';
+        return;
+    }
+    if (!trials || !trials.length) {
+        bodyEl.innerHTML = '<div class="tc-empty">No results returned.</div>';
+        metaEl.innerHTML = '';
+        return;
+    }
+    const sharedCount = trials.filter(t => overlapSet.has(t.nct_id)).length;
+    metaEl.innerHTML = `<span>📋 <strong>${trials.length}</strong> trial${trials.length !== 1 ? 's' : ''}</span>
+                        <span>🔄 <strong>${sharedCount}</strong> shared with other method</span>`;
+    bodyEl.innerHTML = trials.map(t => buildTrialCard(t, method, overlapSet)).join('');
+}
+
+async function runTrialComparison() {
+    const query = document.getElementById('trials-text').value.trim();
+    if (!query) return;
+
+    const btn    = document.getElementById('trials-compare-btn');
+    const status = document.getElementById('trials-status');
+    btn.disabled = true;
+    status.textContent = 'Running both retrieval methods…';
+    document.getElementById('trials-results').style.display = 'none';
+
+    try {
+        const res = await fetch('/compare-trials', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query, top_k: 5 }),
+        });
+        if (!res.ok) throw new Error(`Server ${res.status}: ${await res.text()}`);
+        const data = await res.json();
+
+        const semNctIds = new Set((data.semantic.trials || []).map(t => t.nct_id));
+        const kwNctIds  = new Set((data.keyword.trials  || []).map(t => t.nct_id));
+        const overlap   = new Set([...semNctIds].filter(id => kwNctIds.has(id)));
+
+        const overlapCount = overlap.size;
+        status.textContent = `Done · ${overlapCount} trial${overlapCount !== 1 ? 's' : ''} in both results`;
+
+        renderTrialPanel(
+            data.semantic.trials, 'semantic', data.semantic.error, overlap,
+            document.getElementById('trials-semantic-body'),
+            document.getElementById('trials-semantic-meta'),
+        );
+        document.getElementById('trials-semantic-meta').innerHTML +=
+            `<span>⏱ <strong>${data.semantic.time_seconds}s</strong></span>`;
+
+        renderTrialPanel(
+            data.keyword.trials, 'keyword', data.keyword.error, overlap,
+            document.getElementById('trials-keyword-body'),
+            document.getElementById('trials-keyword-meta'),
+        );
+        document.getElementById('trials-keyword-meta').innerHTML +=
+            `<span>⏱ <strong>${data.keyword.time_seconds}s</strong></span>`;
+
+        document.getElementById('trials-results').style.display = 'grid';
+
+    } catch (err) {
+        status.textContent = `Error: ${err.message}`;
+    } finally {
         btn.disabled = false;
     }
 }
 
 function goToTrialChat() {
-    // Switch to chat tab
     const chatBtn = document.querySelector('.tab-btn');
     switchTab('chat', chatBtn);
 
-    // Build pre-filled message from lab findings
     const condStr = labSuggestedConditions.length
         ? labSuggestedConditions.join(', ')
         : 'conditions from my lab report';
