@@ -15,7 +15,7 @@ CTGOV_API = "https://clinicaltrials.gov/api/v2/studies"
 
 def fetch_trials(
     condition: str = None,
-    max_trials: int = 500,
+    max_trials: int = 50000,
     status: str = "RECRUITING",
     output_path: str = "data/raw_trials.json",
     country: str = None,
@@ -72,4 +72,4 @@ def fetch_trials(
 
 if __name__ == "__main__":
     fetch_trials(condition="diabetes", max_trials=200, output_path="data/raw_trials_diabetes.json")
-    fetch_trials(max_trials=500, output_path="data/raw_trials.json")
+    fetch_trials(max_trials=50000, output_path="data/raw_trials.json")

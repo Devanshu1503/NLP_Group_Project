@@ -1,1073 +1,1850 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TrialNav — Clinical Trial Matching</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TrialNav — Clinical Trial Matching</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Variables ─────────────────────────────────────────────────────── */
+    :root {
+      --blue:        #2563eb;
+      --blue-hover:  #1d4ed8;
+      --blue-light:  #eff6ff;
+      --blue-border: #bfdbfe;
+      --green:       #10b981;
+      --green-light: #ecfdf5;
+      --green-border:#a7f3d0;
+      --amber:       #f59e0b;
+      --amber-light: #fffbeb;
+      --amber-border:#fde68a;
+      --red:         #ef4444;
+      --red-light:   #fef2f2;
+      --red-border:  #fecaca;
+      --navy:        #0f172a;
+      --gray-900:    #111827;
+      --gray-800:    #1f2937;
+      --gray-700:    #374151;
+      --gray-600:    #4b5563;
+      --gray-500:    #6b7280;
+      --gray-400:    #9ca3af;
+      --gray-300:    #d1d5db;
+      --gray-200:    #e5e7eb;
+      --gray-100:    #f3f4f6;
+      --gray-50:     #f9fafb;
+      --surface:     #ffffff;
+      --bg:          #f1f5f9;
+      --sidebar-w:   252px;
+      --radius-sm:   6px;
+      --radius:      10px;
+      --radius-lg:   14px;
+      --radius-xl:   18px;
+      --shadow-sm:   0 1px 3px rgba(0,0,0,.07), 0 1px 2px rgba(0,0,0,.05);
+      --shadow:      0 4px 12px rgba(0,0,0,.07), 0 2px 4px rgba(0,0,0,.05);
+      --shadow-lg:   0 10px 30px rgba(0,0,0,.10), 0 4px 10px rgba(0,0,0,.06);
+      --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --transition: 0.18s ease;
+    }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f0f2f5;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
+    /* ── Reset ─────────────────────────────────────────────────────────── */
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    html, body { height:100%; overflow:hidden; }
+    body { font-family:var(--font); background:var(--bg); color:var(--gray-900); -webkit-font-smoothing:antialiased; }
+    a { color:inherit; text-decoration:none; }
+    button { font-family:var(--font); cursor:pointer; }
+    textarea, input { font-family:var(--font); }
+    ul, ol { padding-left:1.2em; }
 
-        /* ── Header ─────────────────────────────────────────────────────── */
-        header {
-            background: white;
-            border-bottom: 1px solid #e5e7eb;
-            padding: 0 24px;
-            display: flex;
-            align-items: center;
-            gap: 32px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-            flex-shrink: 0;
-            height: 56px;
-        }
+    /* ── Layout ─────────────────────────────────────────────────────────── */
+    .app { display:flex; height:100vh; overflow:hidden; }
 
-        .brand { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
-        .brand-icon {
-            width: 32px; height: 32px;
-            background: #2563eb;
-            border-radius: 8px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 16px;
-        }
-        .brand h1 { font-size: 16px; font-weight: 700; color: #111827; }
-        .brand p  { font-size: 11px; color: #9ca3af; }
+    /* ── Sidebar ─────────────────────────────────────────────────────────── */
+    .sidebar {
+      width: var(--sidebar-w);
+      flex-shrink: 0;
+      background: var(--navy);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+      z-index: 10;
+    }
 
-        /* ── Tabs ────────────────────────────────────────────────────────── */
-        .tabs { display: flex; gap: 2px; flex: 1; }
-        .tab-btn {
-            padding: 0 18px;
-            height: 56px;
-            border: none;
-            background: transparent;
-            font-size: 13.5px;
-            font-weight: 500;
-            color: #6b7280;
-            cursor: pointer;
-            border-bottom: 2px solid transparent;
-            transition: color 0.15s, border-color 0.15s;
-            white-space: nowrap;
-        }
-        .tab-btn:hover { color: #374151; }
-        .tab-btn.active { color: #2563eb; border-bottom-color: #2563eb; }
+    .sidebar-brand {
+      padding: 20px 18px 16px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      flex-shrink: 0;
+    }
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 2px;
+    }
+    .brand-icon {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      box-shadow: 0 2px 8px rgba(37,99,235,.4);
+      flex-shrink: 0;
+    }
+    .brand-text h1 { font-size: 15px; font-weight: 700; color: #fff; letter-spacing: -.2px; }
+    .brand-text p  { font-size: 11px; color: rgba(255,255,255,.45); margin-top:1px; }
 
-        .new-btn {
-            background: white; border: 1px solid #e5e7eb;
-            color: #374151; padding: 6px 14px;
-            border-radius: 8px; font-size: 13px; cursor: pointer;
-            transition: background 0.12s; flex-shrink: 0;
-        }
-        .new-btn:hover { background: #f9fafb; }
+    /* New chat button */
+    .new-chat-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      margin-top: 12px;
+      padding: 8px 12px;
+      background: rgba(255,255,255,.07);
+      border: 1px dashed rgba(255,255,255,.18);
+      border-radius: var(--radius);
+      color: rgba(255,255,255,.7);
+      font-size: 12.5px;
+      font-weight: 500;
+      transition: background var(--transition), color var(--transition);
+    }
+    .new-chat-btn:hover { background: rgba(255,255,255,.12); color: #fff; }
+    .new-chat-btn svg  { width:14px; height:14px; flex-shrink:0; }
 
-        /* ── Views ───────────────────────────────────────────────────────── */
-        .view { display: none; flex: 1; flex-direction: column; overflow: hidden; }
-        .view.active { display: flex; }
+    /* Navigation */
+    .sidebar-nav {
+      flex: 1;
+      padding: 10px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      overflow-y: auto;
+    }
+    .nav-section-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .08em;
+      color: rgba(255,255,255,.3);
+      text-transform: uppercase;
+      padding: 10px 8px 6px;
+    }
 
-        /* ── CHAT VIEW ───────────────────────────────────────────────────── */
-        #chat-area {
-            flex: 1; overflow-y: auto;
-            padding: 28px 16px 12px;
-        }
-        .msgs {
-            max-width: 740px; margin: 0 auto;
-            display: flex; flex-direction: column; gap: 18px;
-        }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 10px;
+      border-radius: var(--radius);
+      color: rgba(255,255,255,.6);
+      font-size: 13.5px;
+      font-weight: 500;
+      transition: background var(--transition), color var(--transition);
+      border: none;
+      background: transparent;
+      width: 100%;
+      text-align: left;
+    }
+    .nav-item:hover { background: rgba(255,255,255,.07); color: rgba(255,255,255,.9); }
+    .nav-item.active {
+      background: rgba(37,99,235,.3);
+      color: #fff;
+      box-shadow: inset 0 0 0 1px rgba(59,130,246,.4);
+    }
+    .nav-item svg { width:17px; height:17px; flex-shrink:0; opacity:.85; }
+    .nav-item.active svg { opacity: 1; }
+    .nav-badge {
+      margin-left: auto;
+      background: rgba(37,99,235,.5);
+      color: #93c5fd;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 1px 6px;
+      border-radius: 100px;
+    }
 
-        .welcome { text-align: center; padding: 56px 24px 24px; color: #6b7280; }
-        .welcome h2 { font-size: 22px; font-weight: 600; color: #111827; margin-bottom: 10px; }
-        .welcome p  { font-size: 15px; max-width: 460px; margin: 0 auto; line-height: 1.6; }
-        .chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 20px; }
-        .chip {
-            background: white; border: 1px solid #e5e7eb;
-            color: #374151; padding: 8px 14px; border-radius: 100px;
-            font-size: 13px; cursor: pointer;
-            transition: border-color 0.12s, color 0.12s, background 0.12s;
-        }
-        .chip:hover { border-color: #2563eb; color: #2563eb; background: #eff6ff; }
+    /* Sidebar footer */
+    .sidebar-footer {
+      padding: 12px 14px;
+      border-top: 1px solid rgba(255,255,255,.08);
+      flex-shrink: 0;
+    }
+    .health-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11.5px;
+      color: rgba(255,255,255,.4);
+    }
+    .health-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--gray-500);
+      flex-shrink: 0;
+      transition: background .3s;
+    }
+    .health-dot.ok      { background: var(--green); box-shadow: 0 0 0 2px rgba(16,185,129,.25); }
+    .health-dot.warn    { background: var(--amber); box-shadow: 0 0 0 2px rgba(245,158,11,.25); }
+    .health-dot.error   { background: var(--red);   box-shadow: 0 0 0 2px rgba(239,68,68,.25); }
+    .health-dot.pulsing { animation: pulse-dot 1.5s infinite; }
+    @keyframes pulse-dot {
+      0%,100% { opacity:1; } 50% { opacity:.4; }
+    }
+    .health-text { flex:1; line-height:1.4; }
+    .health-text strong { color: rgba(255,255,255,.6); display:block; font-size:11px; }
 
-        .message { display: flex; gap: 10px; max-width: 82%; }
-        .message.user      { align-self: flex-end;   flex-direction: row-reverse; }
-        .message.assistant { align-self: flex-start; }
+    /* ── Main area ───────────────────────────────────────────────────────── */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-width: 0;
+    }
 
-        .avatar {
-            width: 30px; height: 30px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 13px; flex-shrink: 0; margin-top: 4px;
-        }
-        .avatar.assistant { background: #2563eb; color: white; }
-        .avatar.user      { background: #e5e7eb; color: #374151; }
+    /* ── Views ───────────────────────────────────────────────────────────── */
+    .view { display:none; flex:1; flex-direction:column; overflow:hidden; animation: fadeIn .2s ease; }
+    .view.active { display:flex; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
 
-        .bubble { padding: 11px 15px; border-radius: 16px; font-size: 14.5px; line-height: 1.65; }
-        .message.user .bubble {
-            background: #2563eb; color: white; border-bottom-right-radius: 4px;
-        }
-        .message.assistant .bubble {
-            background: white; color: #111827; border-bottom-left-radius: 4px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-        }
-        .bubble hr     { border: none; border-top: 1px solid #e5e7eb; margin: 10px 0; }
-        .bubble strong { font-weight: 600; }
-        .bubble em     { font-style: italic; }
-        .bubble ul, .bubble ol { padding-left: 20px; margin: 6px 0; }
-        .bubble li     { margin: 3px 0; }
-        .bubble.error  { background: #fef2f2 !important; color: #991b1b !important; border: 1px solid #fecaca; }
+    /* ── Shared page header ──────────────────────────────────────────────── */
+    .page-header {
+      padding: 22px 28px 0;
+      flex-shrink: 0;
+    }
+    .page-header h2 { font-size: 18px; font-weight: 700; color: var(--gray-900); }
+    .page-header p  { font-size: 13px; color: var(--gray-500); margin-top: 3px; }
 
-        .trials-badge {
-            display: inline-flex; align-items: center; gap: 5px;
-            background: #dcfce7; color: #166534;
-            font-size: 12px; font-weight: 600;
-            padding: 3px 10px; border-radius: 100px; margin-bottom: 10px;
-        }
+    /* ── Shared card ─────────────────────────────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--gray-200);
+    }
 
-        .loading-dots { display: flex; gap: 5px; padding: 2px 0; }
-        .loading-dots span {
-            width: 8px; height: 8px; background: #9ca3af;
-            border-radius: 50%; animation: bounce 1.2s infinite;
-        }
-        .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
-        .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
-        @keyframes bounce {
-            0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
-            40%            { transform: translateY(-6px); opacity: 1; }
-        }
+    /* ── Shared buttons ──────────────────────────────────────────────────── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 9px 18px;
+      border-radius: var(--radius);
+      font-size: 13.5px; font-weight: 600;
+      border: none;
+      transition: background var(--transition), box-shadow var(--transition), opacity var(--transition);
+      white-space: nowrap;
+    }
+    .btn svg { width:15px; height:15px; }
+    .btn-primary { background: var(--blue); color:#fff; }
+    .btn-primary:hover { background: var(--blue-hover); box-shadow: 0 2px 8px rgba(37,99,235,.35); }
+    .btn-primary:disabled { background: #93c5fd; cursor:not-allowed; box-shadow:none; }
+    .btn-success { background: var(--green); color:#fff; }
+    .btn-success:hover { background: #059669; box-shadow: 0 2px 8px rgba(16,185,129,.35); }
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid var(--gray-200);
+      color: var(--gray-700);
+    }
+    .btn-ghost:hover { background: var(--gray-50); }
 
-        #input-area {
-            background: white; border-top: 1px solid #e5e7eb;
-            padding: 14px 16px 16px; flex-shrink: 0;
-        }
-        .input-row {
-            max-width: 740px; margin: 0 auto;
-            display: flex; gap: 10px; align-items: flex-end;
-        }
-        #user-input {
-            flex: 1; border: 1px solid #e5e7eb; border-radius: 12px;
-            padding: 11px 14px; font-size: 14.5px; font-family: inherit;
-            resize: none; outline: none; min-height: 46px; max-height: 120px;
-            line-height: 1.5; color: #111827; background: #f9fafb;
-            transition: border-color 0.15s, background 0.15s;
-        }
-        #user-input:focus { border-color: #2563eb; background: white; }
-        #user-input::placeholder { color: #9ca3af; }
+    /* ── Shared badge ────────────────────────────────────────────────────── */
+    .badge {
+      display: inline-flex; align-items: center;
+      font-size: 11px; font-weight: 600;
+      padding: 2px 8px; border-radius: 100px;
+    }
+    .badge-blue   { background: var(--blue-light);  color: #1d4ed8; }
+    .badge-green  { background: var(--green-light); color: #065f46; }
+    .badge-amber  { background: var(--amber-light); color: #92400e; }
+    .badge-red    { background: var(--red-light);   color: #991b1b; }
+    .badge-gray   { background: var(--gray-100);    color: var(--gray-600); }
 
-        #send-btn {
-            background: #2563eb; color: white; border: none; border-radius: 12px;
-            width: 46px; height: 46px; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            transition: background 0.12s; flex-shrink: 0;
-        }
-        #send-btn:hover    { background: #1d4ed8; }
-        #send-btn:disabled { background: #93c5fd; cursor: not-allowed; }
-        #send-btn svg { width: 19px; height: 19px; }
+    /* ── Shared textarea / input ──────────────────────────────────────────── */
+    .field-input {
+      width: 100%;
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius);
+      padding: 10px 13px;
+      font-size: 13.5px;
+      color: var(--gray-900);
+      background: var(--gray-50);
+      outline: none;
+      transition: border-color var(--transition), background var(--transition), box-shadow var(--transition);
+      resize: vertical;
+    }
+    .field-input:focus {
+      border-color: var(--blue);
+      background: var(--surface);
+      box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+    }
+    .field-input::placeholder { color: var(--gray-400); }
 
-        .disclaimer {
-            text-align: center; font-size: 11px; color: #9ca3af;
-            margin: 8px auto 0; max-width: 740px;
-        }
+    /* ── Skeleton loader ────────────────────────────────────────────────── */
+    .skeleton {
+      background: linear-gradient(90deg, var(--gray-100) 25%, var(--gray-200) 50%, var(--gray-100) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: var(--radius-sm);
+    }
+    @keyframes shimmer { 0% { background-position:200% 0; } 100% { background-position:-200% 0; } }
 
-        /* ── NER COMPARISON VIEW ─────────────────────────────────────────── */
-        #view-ner {
-            overflow-y: auto;
-            padding: 28px 24px;
-            gap: 0;
-        }
+    /* ── Toast ───────────────────────────────────────────────────────────── */
+    #toasts {
+      position: fixed;
+      top: 18px; right: 18px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+    }
+    .toast {
+      display: flex; align-items: center; gap: 10px;
+      padding: 11px 16px;
+      background: var(--gray-900);
+      color: #fff;
+      border-radius: var(--radius);
+      font-size: 13px;
+      font-weight: 500;
+      box-shadow: var(--shadow-lg);
+      pointer-events: auto;
+      animation: toastIn .25s ease;
+      max-width: 340px;
+    }
+    .toast.success { background: #064e3b; border-left: 3px solid var(--green); }
+    .toast.error   { background: #7f1d1d; border-left: 3px solid var(--red); }
+    .toast.warn    { background: #78350f; border-left: 3px solid var(--amber); }
+    @keyframes toastIn { from { opacity:0; transform:translateX(20px); } to { opacity:1; transform:none; } }
+    @keyframes toastOut { from { opacity:1; } to { opacity:0; transform:translateX(20px); } }
 
-        .ner-wrap { max-width: 1100px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+    /* ═══════════════════════════════════════════════════════════════════════
+       CHAT VIEW
+    ════════════════════════════════════════════════════════════════════════ */
+    #view-chat { background: var(--bg); }
 
-        .ner-input-card {
-            background: white; border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-            padding: 20px 24px;
-        }
-        .ner-input-card h2 { font-size: 15px; font-weight: 600; color: #111827; margin-bottom: 12px; }
+    .chat-topbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--gray-200);
+      padding: 0 20px;
+      height: 54px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+      box-shadow: var(--shadow-sm);
+    }
+    .chat-topbar-title { font-size: 14px; font-weight: 600; color: var(--gray-800); flex:1; }
+    .settings-toggle {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 12px;
+      border-radius: var(--radius);
+      border: 1px solid var(--gray-200);
+      background: var(--gray-50);
+      color: var(--gray-600);
+      font-size: 12.5px; font-weight: 500;
+      transition: background var(--transition);
+    }
+    .settings-toggle:hover { background: var(--gray-100); }
+    .settings-toggle svg { width:14px; height:14px; }
+    .settings-toggle.active { border-color: var(--blue); color: var(--blue); background: var(--blue-light); }
 
-        #ner-text, #trials-text {
-            width: 100%; border: 1px solid #e5e7eb; border-radius: 10px;
-            padding: 12px 14px; font-size: 14px; font-family: inherit;
-            resize: vertical; min-height: 100px; color: #111827;
-            background: #f9fafb; outline: none; line-height: 1.6;
-            transition: border-color 0.15s, background 0.15s;
-        }
-        #ner-text:focus, #trials-text:focus { border-color: #2563eb; background: white; }
+    /* Settings panel */
+    .chat-settings-panel {
+      background: var(--surface);
+      border-bottom: 1px solid var(--gray-200);
+      padding: 14px 20px;
+      display: none;
+      gap: 20px;
+      align-items: center;
+      flex-wrap: wrap;
+      flex-shrink: 0;
+    }
+    .chat-settings-panel.open { display: flex; animation: fadeIn .15s ease; }
+    .setting-group { display:flex; align-items:center; gap:10px; }
+    .setting-label { font-size: 12.5px; font-weight: 600; color: var(--gray-600); }
 
-        .ner-actions { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
-        #compare-btn, #trials-compare-btn {
-            background: #2563eb; color: white; border: none;
-            padding: 10px 22px; border-radius: 9px;
-            font-size: 14px; font-weight: 500; cursor: pointer;
-            transition: background 0.12s;
-        }
-        #compare-btn:hover,    #trials-compare-btn:hover    { background: #1d4ed8; }
-        #compare-btn:disabled, #trials-compare-btn:disabled { background: #93c5fd; cursor: not-allowed; }
+    /* Toggle switch */
+    .toggle-wrap { display:flex; align-items:center; gap:8px; }
+    .toggle-switch {
+      position: relative;
+      width: 38px; height: 22px;
+      flex-shrink: 0;
+    }
+    .toggle-switch input { opacity:0; width:0; height:0; position:absolute; }
+    .toggle-track {
+      position: absolute; inset: 0;
+      background: var(--gray-300);
+      border-radius: 100px;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .toggle-track::after {
+      content: '';
+      position: absolute;
+      width: 16px; height: 16px;
+      background: white;
+      border-radius: 50%;
+      top: 3px; left: 3px;
+      transition: transform .2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,.2);
+    }
+    .toggle-switch input:checked + .toggle-track { background: var(--blue); }
+    .toggle-switch input:checked + .toggle-track::after { transform: translateX(16px); }
+    .toggle-label { font-size: 12.5px; color: var(--gray-700); }
 
-        .ner-status { font-size: 13px; color: #6b7280; }
+    /* Method pills */
+    .method-pills { display:flex; gap:4px; }
+    .method-pill {
+      padding: 5px 12px;
+      border-radius: 100px;
+      font-size: 12px; font-weight: 600;
+      border: 1.5px solid var(--gray-200);
+      background: transparent;
+      color: var(--gray-500);
+      transition: all var(--transition);
+    }
+    .method-pill.active { border-color: var(--blue); color: var(--blue); background: var(--blue-light); }
 
-        /* Results grid */
-        .ner-results { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    /* Messages */
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 28px 20px 16px;
+      scroll-behavior: smooth;
+    }
+    .msgs-inner { max-width: 760px; margin: 0 auto; display:flex; flex-direction:column; gap:20px; }
 
-        .model-card {
-            background: white; border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-            overflow: hidden;
-        }
-        .model-header {
-            padding: 14px 18px 12px;
-            border-bottom: 1px solid #f3f4f6;
-            display: flex; align-items: center; gap: 10px;
-        }
-        .model-header h3 { font-size: 14px; font-weight: 600; color: #111827; flex: 1; }
-        .model-badge {
-            font-size: 11px; font-weight: 600; padding: 2px 9px;
-            border-radius: 100px;
-        }
-        .badge-llm   { background: #eff6ff; color: #1d4ed8; }
-        .badge-bert  { background: #f0fdf4; color: #166534; }
+    /* Welcome */
+    .welcome-screen { text-align: center; padding: 48px 24px 32px; }
+    .welcome-icon {
+      width: 60px; height: 60px;
+      background: linear-gradient(135deg, var(--blue), #4f46e5);
+      border-radius: 18px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px;
+      margin: 0 auto 18px;
+      box-shadow: 0 4px 16px rgba(37,99,235,.3);
+    }
+    .welcome-screen h2 { font-size: 22px; font-weight: 700; color: var(--gray-900); margin-bottom:8px; }
+    .welcome-screen p  { font-size: 14.5px; color: var(--gray-500); max-width:460px; margin:0 auto; line-height:1.65; }
+    .prompt-chips { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-top:22px; }
+    .prompt-chip {
+      padding: 8px 16px;
+      background: var(--surface);
+      border: 1.5px solid var(--gray-200);
+      border-radius: 100px;
+      font-size: 13px; color: var(--gray-700);
+      cursor: pointer;
+      transition: all var(--transition);
+      box-shadow: var(--shadow-sm);
+    }
+    .prompt-chip:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-light); transform:translateY(-1px); box-shadow: var(--shadow); }
 
-        .meta-row {
-            display: flex; gap: 14px; padding: 8px 18px;
-            background: #fafafa; border-bottom: 1px solid #f3f4f6;
-            font-size: 12px; color: #6b7280;
-        }
-        .meta-row span strong { color: #374151; }
+    /* Message bubbles */
+    .message { display:flex; gap:10px; max-width:85%; }
+    .message.user      { align-self:flex-end; flex-direction:row-reverse; }
+    .message.assistant { align-self:flex-start; }
 
-        .field-table { width: 100%; border-collapse: collapse; }
-        .field-table tr { border-bottom: 1px solid #f3f4f6; }
-        .field-table tr:last-child { border-bottom: none; }
-        .field-table td {
-            padding: 9px 18px; font-size: 13px; vertical-align: top;
-        }
-        .field-table td:first-child {
-            width: 36%; color: #6b7280; font-weight: 500;
-            white-space: nowrap;
-        }
-        .field-table td:last-child { color: #111827; }
+    .avatar {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      display: flex; align-items:center; justify-content:center;
+      font-size: 14px; flex-shrink:0; margin-top:3px;
+    }
+    .avatar.assistant {
+      background: linear-gradient(135deg, var(--blue), #4f46e5);
+      color: white;
+      box-shadow: 0 2px 6px rgba(37,99,235,.3);
+    }
+    .avatar.user { background: var(--gray-200); color: var(--gray-700); }
 
-        .field-table tr.differs td { background: #fffbeb; }
-        .field-table tr.differs td:first-child { color: #92400e; }
+    .bubble {
+      padding: 11px 15px;
+      border-radius: var(--radius-lg);
+      font-size: 14px;
+      line-height: 1.7;
+      max-width: 100%;
+    }
+    .message.user .bubble {
+      background: linear-gradient(135deg, var(--blue), #4f46e5);
+      color: white;
+      border-bottom-right-radius: 4px;
+    }
+    .message.assistant .bubble {
+      background: var(--surface);
+      color: var(--gray-900);
+      border-bottom-left-radius: 4px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--gray-100);
+    }
+    .bubble hr     { border:none; border-top:1px solid var(--gray-200); margin:10px 0; }
+    .bubble strong { font-weight:600; }
+    .bubble em     { font-style:italic; }
+    .bubble code   { background:var(--gray-100); padding:1px 5px; border-radius:4px; font-size:.9em; font-family:monospace; }
+    .bubble ul, .bubble ol { padding-left:18px; margin:6px 0; }
+    .bubble li     { margin:3px 0; }
+    .bubble h3     { font-size:14.5px; font-weight:700; margin:8px 0 4px; }
+    .bubble.is-error { background:var(--red-light) !important; color:#991b1b !important; border-color:var(--red-border) !important; }
 
-        .val-empty { color: #d1d5db !important; font-style: italic; }
-        .val-list  { list-style: disc inside; padding: 0; margin: 0; }
-        .val-list li { margin: 1px 0; }
+    /* Trials found badge in chat */
+    .trials-found-badge {
+      display: inline-flex; align-items:center; gap:5px;
+      background: var(--green-light);
+      color: #065f46;
+      font-size: 12px; font-weight: 700;
+      padding: 4px 10px; border-radius: 100px;
+      margin-bottom: 10px;
+      border: 1px solid var(--green-border);
+    }
 
-        .model-error {
-            padding: 16px 18px; color: #991b1b;
-            background: #fef2f2; font-size: 13px;
-        }
+    /* Typing indicator */
+    .typing-indicator { display:flex; gap:5px; padding:4px 0; }
+    .typing-indicator span {
+      width:8px; height:8px;
+      background: var(--gray-400);
+      border-radius:50%;
+      animation: bounce 1.2s infinite;
+    }
+    .typing-indicator span:nth-child(2) { animation-delay:.2s; }
+    .typing-indicator span:nth-child(3) { animation-delay:.4s; }
+    @keyframes bounce {
+      0%,80%,100% { transform:translateY(0); opacity:.4; }
+      40%          { transform:translateY(-7px); opacity:1; }
+    }
 
-        /* Legend */
-        .legend {
-            display: flex; align-items: center; gap: 6px;
-            font-size: 12px; color: #92400e;
-        }
-        .legend-dot {
-            width: 10px; height: 10px;
-            background: #fffbeb; border: 1px solid #fde68a;
-            border-radius: 2px; flex-shrink: 0;
-        }
+    /* Chat input */
+    .chat-input-area {
+      background: var(--surface);
+      border-top: 1px solid var(--gray-200);
+      padding: 14px 20px 16px;
+      flex-shrink: 0;
+    }
+    .chat-input-row {
+      max-width: 760px;
+      margin: 0 auto;
+      display: flex; gap: 10px; align-items: flex-end;
+    }
+    #user-input {
+      flex:1;
+      border: 1.5px solid var(--gray-200);
+      border-radius: var(--radius-lg);
+      padding: 11px 14px;
+      font-size: 14px;
+      line-height: 1.5;
+      resize: none;
+      outline: none;
+      min-height: 48px; max-height: 130px;
+      color: var(--gray-900);
+      background: var(--gray-50);
+      transition: border-color var(--transition), background var(--transition), box-shadow var(--transition);
+    }
+    #user-input:focus { border-color: var(--blue); background: var(--surface); box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
+    #user-input::placeholder { color: var(--gray-400); }
 
-        /* ── TRIAL COMPARISON VIEW ───────────────────────────────────────── */
-        #view-trials { overflow-y: auto; }
+    #send-btn {
+      width: 46px; height: 46px;
+      background: var(--blue);
+      border: none; border-radius: var(--radius-lg);
+      display: flex; align-items:center; justify-content:center;
+      color: white;
+      flex-shrink: 0;
+      transition: background var(--transition), box-shadow var(--transition);
+    }
+    #send-btn:hover    { background: var(--blue-hover); box-shadow: 0 2px 8px rgba(37,99,235,.4); }
+    #send-btn:disabled { background: #93c5fd; cursor:not-allowed; box-shadow:none; }
+    #send-btn svg { width:19px; height:19px; }
 
-        .trials-legend {
-            display: flex; align-items: center; gap: 16px;
-            font-size: 12px; flex-wrap: wrap;
-        }
-        .trials-legend-item { display: flex; align-items: center; gap: 5px; }
-        .tleg-dot {
-            width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0;
-        }
-        .tleg-both   { background: #fef3c7; border: 1px solid #fde68a; }
-        .tleg-left   { background: #eff6ff; border: 1px solid #bfdbfe; }
-        .tleg-right  { background: #f0fdf4; border: 1px solid #bbf7d0; }
+    .chat-disclaimer {
+      max-width: 760px; margin: 8px auto 0;
+      text-align: center;
+      font-size: 11px; color: var(--gray-400); line-height:1.5;
+    }
 
-        .trial-list { padding: 0 18px 18px; display: flex; flex-direction: column; gap: 10px; }
+    /* ═══════════════════════════════════════════════════════════════════════
+       NER VIEW
+    ════════════════════════════════════════════════════════════════════════ */
+    #view-ner { overflow-y: auto; }
+    .ner-wrap { max-width: 1140px; margin: 0 auto; padding: 22px 28px 28px; display:flex; flex-direction:column; gap:18px; }
 
-        .trial-card {
-            border: 1px solid #e5e7eb; border-radius: 10px;
-            padding: 13px 15px; font-size: 13px; background: white;
-        }
-        .trial-card.tc-both  { background: #fffbeb; border-color: #fde68a; }
-        .trial-card.tc-left  { background: #eff6ff; border-color: #bfdbfe; }
-        .trial-card.tc-right { background: #f0fdf4; border-color: #bbf7d0; }
+    .ner-input-section { padding: 20px 22px; }
+    .ner-input-label { font-size: 13px; font-weight:600; color:var(--gray-700); margin-bottom:8px; display:block; }
+    .ner-actions { display:flex; align-items:center; gap:12px; margin-top:12px; flex-wrap:wrap; }
+    .ner-status  { font-size:12.5px; color:var(--gray-500); }
+    .diff-legend { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--gray-500); }
+    .diff-swatch {
+      width:12px; height:12px;
+      background:var(--amber-light);
+      border:1.5px solid var(--amber-border);
+      border-radius:3px; flex-shrink:0;
+    }
 
-        .tc-header {
-            display: flex; align-items: center; gap: 6px;
-            flex-wrap: wrap; margin-bottom: 6px;
-        }
-        .tc-nct   { font-size: 11px; color: #6b7280; font-family: monospace; }
-        .tc-badge {
-            font-size: 11px; font-weight: 600;
-            padding: 1px 8px; border-radius: 100px;
-        }
-        .tc-phase  { background: #eff6ff; color: #1d4ed8; }
-        .tc-status { background: #f0fdf4; color: #166534; }
-        .tc-both-badge { background: #fef3c7; color: #92400e; }
+    .ner-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
 
-        .tc-title {
-            font-size: 13.5px; font-weight: 600; color: #111827;
-            margin-bottom: 5px; line-height: 1.35;
-        }
-        .tc-title a { color: inherit; text-decoration: none; }
-        .tc-title a:hover { text-decoration: underline; }
+    .model-card { overflow:hidden; }
+    .model-card-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--gray-100);
+      display: flex; align-items:center; gap:10px;
+    }
+    .model-card-header h3 { font-size:14px; font-weight:700; color:var(--gray-900); flex:1; }
 
-        .tc-score  { font-size: 12px; color: #6b7280; margin-bottom: 6px; }
-        .tc-snippet {
-            font-size: 12px; color: #4b5563; background: rgba(0,0,0,0.03);
-            border-left: 3px solid #d1d5db; border-radius: 0 5px 5px 0;
-            padding: 7px 10px; line-height: 1.5; margin-bottom: 5px;
-        }
-        .tc-conditions { font-size: 11.5px; color: #6b7280; }
+    .model-meta {
+      display: flex; gap:16px;
+      padding: 9px 18px;
+      background: var(--gray-50);
+      border-bottom: 1px solid var(--gray-100);
+      font-size:12px; color:var(--gray-500);
+    }
+    .model-meta span strong { color:var(--gray-800); }
 
-        .tc-empty {
-            padding: 28px 18px; text-align: center;
-            font-size: 13px; color: #9ca3af; font-style: italic;
-        }
-        .tc-error {
-            padding: 14px 18px; background: #fef2f2;
-            color: #991b1b; font-size: 13px; border-radius: 8px; margin: 12px 18px 0;
-        }
-    </style>
+    .field-table { width:100%; border-collapse:collapse; }
+    .field-table tr { border-bottom:1px solid var(--gray-100); }
+    .field-table tr:last-child { border-bottom:none; }
+    .field-table td { padding:9px 18px; font-size:13px; vertical-align:top; }
+    .field-table td:first-child { width:38%; color:var(--gray-500); font-weight:500; white-space:nowrap; }
+    .field-table td:last-child  { color:var(--gray-800); }
+    .field-table tr.diff-row td { background:var(--amber-light); }
+    .field-table tr.diff-row td:first-child { color:#92400e; font-weight:600; }
+
+    .val-empty { color:var(--gray-300) !important; font-style:italic; }
+    .val-list  { list-style:disc; padding-left:16px; margin:0; }
+    .val-list li { margin:2px 0; }
+    .model-err { padding:16px 18px; color:#991b1b; background:var(--red-light); font-size:13px; }
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       LAB REPORT VIEW
+    ════════════════════════════════════════════════════════════════════════ */
+    #view-lab { overflow-y:auto; }
+    .lab-wrap { max-width: 960px; margin:0 auto; padding:22px 28px 28px; display:flex; flex-direction:column; gap:18px; }
+
+    /* Upload card */
+    .lab-upload-card { padding:22px 24px; }
+    .lab-upload-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .lab-field-label { font-size:12.5px; font-weight:600; color:var(--gray-700); margin-bottom:6px; display:block; }
+
+    /* Drag & drop zone */
+    .drop-zone {
+      border: 2px dashed var(--gray-300);
+      border-radius: var(--radius-lg);
+      padding: 22px 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color var(--transition), background var(--transition);
+      background: var(--gray-50);
+      position: relative;
+    }
+    .drop-zone.drag-over { border-color: var(--blue); background: var(--blue-light); }
+    .drop-zone input[type="file"] {
+      position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%;
+    }
+    .drop-zone-icon { font-size:26px; margin-bottom:6px; }
+    .drop-zone p { font-size:13px; color:var(--gray-600); }
+    .drop-zone small { font-size:11.5px; color:var(--gray-400); }
+    .drop-zone.has-file { border-color:var(--green); background:var(--green-light); }
+    .drop-zone.has-file p { color:#065f46; font-weight:600; }
+
+    .lab-actions { display:flex; align-items:center; gap:12px; margin-top:16px; }
+    #lab-status  { font-size:12.5px; color:var(--gray-500); }
+
+    /* Lab results sections */
+    .lab-results { display:flex; flex-direction:column; gap:16px; }
+    .lab-section { padding:20px 24px; }
+    .lab-section h3 { font-size:14px; font-weight:700; color:var(--gray-900); margin-bottom:14px; }
+
+    /* Biomarkers table */
+    .bio-table { width:100%; border-collapse:collapse; font-size:13px; }
+    .bio-table thead tr { background:var(--gray-50); }
+    .bio-table th {
+      padding: 8px 12px;
+      text-align:left;
+      font-size:11.5px; font-weight:700;
+      color:var(--gray-500);
+      text-transform:uppercase;
+      letter-spacing:.04em;
+      border-bottom:1.5px solid var(--gray-200);
+    }
+    .bio-table td { padding:9px 12px; border-bottom:1px solid var(--gray-100); vertical-align:middle; }
+    .bio-table tr:last-child td { border-bottom:none; }
+    .bio-table td:first-child { font-weight:600; color:var(--gray-800); }
+
+    .status-pill {
+      display:inline-flex; align-items:center;
+      font-size:11px; font-weight:700;
+      padding:2px 9px; border-radius:100px;
+    }
+    .status-HIGH   { background:var(--red-light);   color:#991b1b; }
+    .status-LOW    { background:var(--blue-light);  color:#1e40af; }
+    .status-NORMAL { background:var(--green-light); color:#065f46; }
+    .status-UNKNOWN{ background:var(--gray-100);    color:var(--gray-500); }
+
+    /* Interpretation list */
+    .interp-list { list-style:none; padding:0; display:flex; flex-direction:column; gap:10px; }
+    .interp-item { display:flex; gap:10px; }
+    .interp-dot  { width:8px; height:8px; border-radius:50%; background:var(--blue); flex-shrink:0; margin-top:6px; }
+    .interp-text { font-size:13.5px; color:var(--gray-700); line-height:1.65; }
+    .interp-text strong { color:var(--gray-900); }
+    .interp-text em { color:var(--gray-500); font-style:italic; }
+
+    /* Condition cards */
+    .condition-cards { display:flex; flex-direction:column; gap:10px; }
+    .condition-card {
+      padding:14px 16px;
+      border:1px solid var(--gray-200);
+      border-radius:var(--radius);
+      background:var(--gray-50);
+    }
+    .condition-card-header { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+    .condition-name { font-weight:700; font-size:14px; color:var(--gray-900); flex:1; }
+    .condition-meta { font-size:12px; color:var(--gray-500); display:flex; gap:14px; }
+    .condition-meta span strong { color:var(--gray-700); }
+
+    /* Confidence bar */
+    .conf-bar-wrap { height:4px; background:var(--gray-200); border-radius:100px; margin-top:8px; overflow:hidden; }
+    .conf-bar { height:100%; border-radius:100px; transition:width .5s ease; }
+    .conf-high   .conf-bar { background:var(--green); width:90%; }
+    .conf-medium .conf-bar { background:var(--amber); width:60%; }
+    .conf-low    .conf-bar { background:var(--gray-400); width:30%; }
+
+    /* Trial-relevant values */
+    .trial-values-list { list-style:none; padding:0; display:flex; flex-direction:column; gap:8px; }
+    .trial-values-list li {
+      display:flex; align-items:flex-start; gap:8px;
+      font-size:13.5px; color:var(--gray-700); line-height:1.6;
+    }
+    .trial-values-list li::before { content:'→'; color:var(--blue); font-weight:700; flex-shrink:0; margin-top:1px; }
+
+    /* Summary box */
+    .summary-box {
+      background:linear-gradient(135deg,#f0f7ff,#f5f3ff);
+      border:1px solid #c7d7fd;
+      border-radius:var(--radius-lg);
+      padding:20px 24px;
+    }
+    .summary-box h3 { font-size:14px; font-weight:700; color:var(--gray-900); margin-bottom:10px; }
+    .summary-box p  { font-size:13.5px; line-height:1.75; color:var(--gray-700); }
+
+    /* Physician note */
+    .physician-note {
+      background:var(--amber-light);
+      border:1px solid var(--amber-border);
+      border-radius:var(--radius);
+      padding:14px 18px;
+      display:flex; gap:10px; align-items:flex-start;
+    }
+    .physician-note-icon { font-size:18px; flex-shrink:0; margin-top:1px; }
+    .physician-note p { font-size:12.5px; color:#92400e; line-height:1.65; }
+
+    /* CTA */
+    .lab-cta-btn {
+      align-self: flex-start;
+      padding: 12px 22px;
+      background: var(--green);
+      color: white;
+      border: none;
+      border-radius: var(--radius-lg);
+      font-size: 14px; font-weight: 700;
+      cursor: pointer;
+      display: flex; align-items:center; gap:8px;
+      transition: background var(--transition), box-shadow var(--transition), transform var(--transition);
+      box-shadow: 0 2px 8px rgba(16,185,129,.3);
+    }
+    .lab-cta-btn:hover { background:#059669; transform:translateY(-1px); box-shadow:0 4px 14px rgba(16,185,129,.4); }
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       TRIAL COMPARISON VIEW
+    ════════════════════════════════════════════════════════════════════════ */
+    #view-trials { overflow-y:auto; }
+    .trials-wrap { max-width:1140px; margin:0 auto; padding:22px 28px 28px; display:flex; flex-direction:column; gap:18px; }
+
+    .trials-query-card { padding:20px 22px; }
+    .trials-actions  { display:flex; align-items:center; gap:12px; margin-top:12px; flex-wrap:wrap; }
+    #trials-status   { font-size:12.5px; color:var(--gray-500); }
+
+    /* Overlap legend */
+    .overlap-legend { display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+    .legend-item { display:flex; align-items:center; gap:5px; font-size:12px; }
+    .legend-swatch { width:11px; height:11px; border-radius:3px; flex-shrink:0; }
+    .swatch-both  { background:var(--amber-light);  border:1.5px solid var(--amber-border); }
+    .swatch-left  { background:var(--blue-light);   border:1.5px solid var(--blue-border); }
+    .swatch-right { background:var(--green-light);  border:1.5px solid var(--green-border); }
+
+    .trials-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+
+    .trials-panel { overflow:hidden; }
+    .trials-panel-header {
+      padding:14px 18px;
+      border-bottom:1px solid var(--gray-100);
+      display:flex; align-items:center; gap:10px;
+    }
+    .trials-panel-header h3 { font-size:14px; font-weight:700; color:var(--gray-900); flex:1; }
+    .trials-panel-meta {
+      padding:9px 18px;
+      background:var(--gray-50);
+      border-bottom:1px solid var(--gray-100);
+      display:flex; gap:14px;
+      font-size:12px; color:var(--gray-500);
+    }
+    .trials-panel-meta span strong { color:var(--gray-800); }
+
+    .trial-list { padding:12px 14px; display:flex; flex-direction:column; gap:10px; }
+
+    .trial-card {
+      border:1.5px solid var(--gray-200);
+      border-radius:var(--radius);
+      padding:13px 14px;
+      background:var(--surface);
+      transition: box-shadow var(--transition), transform var(--transition);
+    }
+    .trial-card:hover { box-shadow:var(--shadow); transform:translateY(-1px); }
+    .trial-card.tc-both  { background:var(--amber-light);  border-color:var(--amber-border); }
+    .trial-card.tc-left  { background:var(--blue-light);   border-color:var(--blue-border); }
+    .trial-card.tc-right { background:var(--green-light);  border-color:var(--green-border); }
+
+    .trial-card-header { display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:6px; }
+    .tc-nct { font-size:11px; color:var(--gray-500); font-family:monospace; background:rgba(0,0,0,.04); padding:2px 6px; border-radius:4px; }
+    .tc-title { font-size:13.5px; font-weight:700; color:var(--gray-900); margin-bottom:5px; line-height:1.35; }
+    .tc-title a:hover { text-decoration:underline; }
+    .tc-score { font-size:12px; color:var(--gray-500); margin-bottom:6px; }
+    .tc-score strong { color:var(--blue); }
+    .tc-snippet {
+      font-size:12px; color:var(--gray-600);
+      background:rgba(0,0,0,.03);
+      border-left:3px solid var(--gray-300);
+      border-radius:0 4px 4px 0;
+      padding:6px 10px; line-height:1.55; margin-bottom:5px;
+    }
+    .tc-conditions { font-size:11.5px; color:var(--gray-400); }
+    .tc-empty { padding:24px 18px; text-align:center; font-size:13px; color:var(--gray-400); font-style:italic; }
+    .tc-error {
+      margin:12px 14px; padding:12px 14px;
+      background:var(--red-light); color:#991b1b;
+      font-size:13px; border-radius:var(--radius);
+      border:1px solid var(--red-border);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       RESPONSIVE
+    ════════════════════════════════════════════════════════════════════════ */
+    @media (max-width: 900px) {
+      :root { --sidebar-w: 200px; }
+    }
+    @media (max-width: 700px) {
+      .sidebar { display:none; }
+      .ner-grid, .trials-grid { grid-template-columns:1fr; }
+      .lab-upload-grid { grid-template-columns:1fr; }
+    }
+
+    /* ── Scrollbar styling ───────────────────────────────────────────────── */
+    ::-webkit-scrollbar { width:6px; height:6px; }
+    ::-webkit-scrollbar-track { background:transparent; }
+    ::-webkit-scrollbar-thumb { background:var(--gray-300); border-radius:3px; }
+    ::-webkit-scrollbar-thumb:hover { background:var(--gray-400); }
+  </style>
 </head>
 <body>
 
-<header>
-    <div class="brand">
+<!-- Toast container -->
+<div id="toasts"></div>
+
+<div class="app">
+
+  <!-- ── Sidebar ──────────────────────────────────────────────────────── -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-logo">
         <div class="brand-icon">⚕</div>
-        <div>
-            <h1>TrialNav</h1>
-            <p>Clinical Trial Matching</p>
+        <div class="brand-text">
+          <h1>TrialNav</h1>
+          <p>Clinical Trial Matching</p>
         </div>
+      </div>
+      <button class="new-chat-btn" onclick="newChat()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        New Conversation
+      </button>
     </div>
 
-    <nav class="tabs">
-        <button class="tab-btn active" onclick="switchTab('chat', this)">💬 Chat</button>
-        <button class="tab-btn" onclick="switchTab('ner', this)">🔬 NER Comparison</button>
-        <button class="tab-btn" onclick="switchTab('lab', this)">🧪 Lab Report</button>
-        <button class="tab-btn" onclick="switchTab('trials', this)">⚖️ Trial Retrieval Comparison</button>
-    </nav>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Workspace</div>
 
-    <button class="new-btn" id="new-btn" onclick="newChat()">+ New Conversation</button>
-</header>
-
-<!-- ── CHAT VIEW ──────────────────────────────────────────────────────── -->
-<div class="view active" id="view-chat">
-    <div id="chat-area">
-        <div class="msgs" id="messages">
-            <div class="welcome" id="welcome">
-                <h2>Find Clinical Trials That Match You</h2>
-                <p>Describe your health situation in plain language — your age, conditions, medications, and location — and I'll find recruiting trials that may be relevant to you.</p>
-                <div class="chips">
-                    <div class="chip" onclick="useChip(this)">I have Type 2 diabetes and live in Chicago</div>
-                    <div class="chip" onclick="useChip(this)">I was diagnosed with breast cancer, I'm 48, in Naperville</div>
-                    <div class="chip" onclick="useChip(this)">I have Parkinson's disease, male, 67, Evanston IL</div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div id="input-area">
-        <div class="input-row">
-            <textarea id="user-input" placeholder="Describe your health situation, age, location…" rows="1"></textarea>
-            <button id="send-btn" onclick="sendMessage()" title="Send (Enter)">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
-                     stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="22" y1="2" x2="11" y2="13"></line>
-                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                </svg>
-            </button>
-        </div>
-        <p class="disclaimer">TrialNav is for informational purposes only. Always consult your healthcare provider before enrolling in any trial.</p>
-    </div>
-</div>
-
-<!-- ── NER COMPARISON VIEW ────────────────────────────────────────────── -->
-<div class="view" id="view-ner">
-    <div class="ner-wrap">
-
-        <div class="ner-input-card">
-            <h2>Patient Description</h2>
-            <textarea id="ner-text" placeholder="Paste a patient description here…">I am 47, I have had Type 2 diabetes for 6 years, I take metformin, and I was recently told my kidneys are showing early signs of damage. I live in Chicago.</textarea>
-            <div class="ner-actions">
-                <button id="compare-btn" onclick="runComparison()">Compare Both Models</button>
-                <div class="legend">
-                    <div class="legend-dot"></div>
-                    Highlighted rows = models disagree
-                </div>
-                <span class="ner-status" id="ner-status"></span>
-            </div>
-        </div>
-
-        <div class="ner-results" id="ner-results" style="display:none;">
-
-            <div class="model-card" id="llm-card">
-                <div class="model-header">
-                    <h3>🤖 LLM Extraction</h3>
-                    <span class="model-badge badge-llm">Claude Sonnet</span>
-                </div>
-                <div class="meta-row" id="llm-meta"></div>
-                <div id="llm-body"></div>
-            </div>
-
-            <div class="model-card" id="bert-card">
-                <div class="model-header">
-                    <h3>🧬 BioBERT Extraction</h3>
-                    <span class="model-badge badge-bert">dslim/bert-base-NER</span>
-                </div>
-                <div class="meta-row" id="bert-meta"></div>
-                <div id="bert-body"></div>
-            </div>
-
-        </div>
-    </div>
-</div>
-
-<!-- ── LAB REPORT VIEW ────────────────────────────────────────────────── -->
-<div class="view" id="view-lab" style="overflow-y:auto; padding:28px 24px;">
-  <div style="max-width:860px; margin:0 auto; display:flex; flex-direction:column; gap:20px;">
-
-    <!-- Upload card -->
-    <div style="background:white; border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,.08); padding:24px;">
-      <h2 style="font-size:15px; font-weight:600; color:#111827; margin-bottom:16px;">Upload Lab Report</h2>
-
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
-        <div>
-          <label style="font-size:13px; font-weight:500; color:#374151; display:block; margin-bottom:6px;">Upload PDF</label>
-          <input type="file" id="lab-file" accept=".pdf"
-            style="width:100%; font-size:13px; border:1px solid #e5e7eb; border-radius:8px; padding:8px 10px; background:#f9fafb; cursor:pointer;" />
-        </div>
-        <div>
-          <label style="font-size:13px; font-weight:500; color:#374151; display:block; margin-bottom:6px;">Or paste lab text</label>
-          <textarea id="lab-text" placeholder="Paste raw lab values here…"
-            style="width:100%; height:80px; border:1px solid #e5e7eb; border-radius:8px; padding:8px 10px; font-size:13px; font-family:inherit; resize:vertical; background:#f9fafb;"></textarea>
-        </div>
-      </div>
-
-      <div style="margin-top:14px;">
-        <label style="font-size:13px; font-weight:500; color:#374151; display:block; margin-bottom:6px;">Symptoms (comma-separated, optional)</label>
-        <input type="text" id="lab-symptoms" placeholder="e.g. fatigue, frequent urination, blurred vision"
-          style="width:100%; border:1px solid #e5e7eb; border-radius:8px; padding:9px 12px; font-size:13px; font-family:inherit; background:#f9fafb;" />
-      </div>
-
-      <div style="margin-top:16px; display:flex; align-items:center; gap:14px;">
-        <button id="lab-btn" onclick="analyzeReport()"
-          style="background:#2563eb; color:white; border:none; border-radius:8px; padding:10px 22px; font-size:13.5px; font-weight:600; cursor:pointer;">
-          Analyze Report
-        </button>
-        <span id="lab-status" style="font-size:13px; color:#6b7280;"></span>
-      </div>
-    </div>
-
-    <!-- Results -->
-    <div id="lab-results" style="display:none; flex-direction:column; gap:16px;">
-
-      <!-- Biomarkers table -->
-      <div style="background:white; border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,.08); padding:20px 24px;">
-        <h3 style="font-size:14px; font-weight:600; color:#111827; margin-bottom:14px;">Biomarker Results</h3>
-        <div id="lab-biomarkers-table"></div>
-      </div>
-
-      <!-- Interpretation -->
-      <div style="background:white; border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,.08); padding:20px 24px;">
-        <h3 style="font-size:14px; font-weight:600; color:#111827; margin-bottom:12px;">Biomarker Interpretation</h3>
-        <ol id="lab-interpretation" style="padding-left:18px; font-size:13.5px; line-height:1.7; color:#374151;"></ol>
-      </div>
-
-      <!-- Suggested conditions -->
-      <div style="background:white; border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,.08); padding:20px 24px;">
-        <h3 style="font-size:14px; font-weight:600; color:#111827; margin-bottom:14px;">Suggested Conditions</h3>
-        <div id="lab-conditions" style="display:flex; flex-direction:column; gap:12px;"></div>
-      </div>
-
-      <!-- Trial-relevant values -->
-      <div style="background:white; border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,.08); padding:20px 24px;">
-        <h3 style="font-size:14px; font-weight:600; color:#111827; margin-bottom:10px;">Trial-Relevant Findings</h3>
-        <ul id="lab-trial-values" style="padding-left:18px; font-size:13.5px; line-height:1.7; color:#374151;"></ul>
-      </div>
-
-      <!-- Reasoning summary -->
-      <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:20px 24px;">
-        <h3 style="font-size:14px; font-weight:600; color:#111827; margin-bottom:10px;">Summary</h3>
-        <p id="lab-summary" style="font-size:13.5px; line-height:1.75; color:#374151;"></p>
-      </div>
-
-      <!-- Physician note -->
-      <div style="background:#fffbeb; border:1px solid #fcd34d; border-radius:12px; padding:16px 20px;">
-        <p id="lab-physician-note" style="font-size:13px; color:#92400e; line-height:1.6;"></p>
-      </div>
-
-      <!-- CTA button -->
-      <button onclick="goToTrialChat()"
-        style="background:#16a34a; color:white; border:none; border-radius:10px; padding:13px 24px; font-size:14px; font-weight:600; cursor:pointer; align-self:flex-start;">
-        🔍 Find Matching Trials Based on These Results
+      <button class="nav-item active" data-view="chat" onclick="switchView('chat', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+        Chat
+        <span class="nav-badge">AI</span>
       </button>
 
+      <div class="nav-section-label" style="margin-top:8px;">Tools</div>
+
+      <button class="nav-item" data-view="ner" onclick="switchView('ner', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+          <rect x="9" y="3" width="6" height="4" rx="2"/>
+          <path d="M9 12h6M9 16h4"/>
+        </svg>
+        NER Comparison
+      </button>
+
+      <button class="nav-item" data-view="lab" onclick="switchView('lab', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10 2v7.31l-3.24 5.4A1 1 0 0 0 7.62 16h8.76a1 1 0 0 0 .86-1.29L14 9.31V2"/>
+          <path d="M8.5 2h7"/>
+        </svg>
+        Lab Report
+      </button>
+
+      <button class="nav-item" data-view="trials" onclick="switchView('trials', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="18" x2="21" y2="18"/>
+          <circle cx="18" cy="6" r="2" fill="currentColor" stroke="none"/>
+          <circle cx="6" cy="12" r="2" fill="currentColor" stroke="none"/>
+          <circle cx="14" cy="18" r="2" fill="currentColor" stroke="none"/>
+        </svg>
+        Trial Retrieval
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="health-indicator">
+        <div class="health-dot pulsing" id="health-dot"></div>
+        <div class="health-text">
+          <strong id="health-label">Connecting…</strong>
+          <span id="health-detail"></span>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
+  </aside>
 
-<!-- ── TRIAL COMPARISON VIEW ──────────────────────────────────────────── -->
-<div class="view" id="view-trials">
-    <div class="ner-wrap">
+  <!-- ── Main ─────────────────────────────────────────────────────────── -->
+  <main class="main">
 
-        <div class="ner-input-card">
-            <h2>Trial Query</h2>
-            <textarea id="trials-text" placeholder="Enter a condition or clinical query…">Type 2 diabetes with early-stage kidney disease</textarea>
-            <div class="ner-actions">
-                <button id="trials-compare-btn" onclick="runTrialComparison()">Compare Retrieval Methods</button>
-                <div class="trials-legend">
-                    <div class="trials-legend-item">
-                        <div class="tleg-dot tleg-both"></div>
-                        <span style="color:#92400e">In both results</span>
-                    </div>
-                    <div class="trials-legend-item">
-                        <div class="tleg-dot tleg-left"></div>
-                        <span style="color:#1d4ed8">Semantic only</span>
-                    </div>
-                    <div class="trials-legend-item">
-                        <div class="tleg-dot tleg-right"></div>
-                        <span style="color:#166534">Keyword only</span>
-                    </div>
-                </div>
-                <span class="ner-status" id="trials-status"></span>
+    <!-- ══ CHAT VIEW ════════════════════════════════════════════════════ -->
+    <div class="view active" id="view-chat">
+
+      <!-- Top bar -->
+      <div class="chat-topbar">
+        <div class="chat-topbar-title">Patient Assistant</div>
+        <button class="settings-toggle" id="settings-toggle" onclick="toggleSettings()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+          Retrieval Settings
+        </button>
+      </div>
+
+      <!-- Settings panel -->
+      <div class="chat-settings-panel" id="chat-settings">
+        <div class="setting-group">
+          <span class="setting-label">Retrieval Method</span>
+          <div class="method-pills">
+            <button class="method-pill active" id="pill-semantic" onclick="setMethod('semantic')">Semantic RAG</button>
+            <button class="method-pill"         id="pill-keyword"  onclick="setMethod('keyword')">Keyword</button>
+          </div>
+        </div>
+        <div class="setting-group">
+          <span class="setting-label">Reranker</span>
+          <label class="toggle-wrap">
+            <div class="toggle-switch">
+              <input type="checkbox" id="reranker-toggle" checked onchange="chatSettings.reranker = this.checked" />
+              <div class="toggle-track"></div>
             </div>
+            <span class="toggle-label">Claude Haiku reranking</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Messages -->
+      <div class="chat-messages" id="chat-messages">
+        <div class="msgs-inner" id="messages">
+          <div class="welcome-screen" id="welcome">
+            <div class="welcome-icon">⚕</div>
+            <h2>Find Clinical Trials That Match You</h2>
+            <p>Describe your health situation in plain language — your age, conditions, medications, and location — and I'll find recruiting trials that may be relevant to you.</p>
+            <div class="prompt-chips">
+              <div class="prompt-chip" onclick="useChip(this)">I have Type 2 diabetes and live in Chicago</div>
+              <div class="prompt-chip" onclick="useChip(this)">Breast cancer diagnosed, I'm 48, in Naperville</div>
+              <div class="prompt-chip" onclick="useChip(this)">Parkinson's disease, male, 67, Evanston IL</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Input -->
+      <div class="chat-input-area">
+        <div class="chat-input-row">
+          <textarea id="user-input" placeholder="Describe your health situation, age, location…" rows="1"></textarea>
+          <button id="send-btn" onclick="sendMessage()" title="Send (Enter)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+            </svg>
+          </button>
+        </div>
+        <p class="chat-disclaimer">TrialNav is for informational purposes only. Always consult your healthcare provider before enrolling in any clinical trial.</p>
+      </div>
+    </div>
+
+    <!-- ══ NER COMPARISON VIEW ══════════════════════════════════════════ -->
+    <div class="view" id="view-ner">
+      <div class="ner-wrap">
+        <div class="page-header" style="padding:0;">
+          <h2>NER Comparison</h2>
+          <p>Compare patient profile extraction between Claude LLM and BioBERT side-by-side.</p>
         </div>
 
-        <div class="ner-results" id="trials-results" style="display:none;">
-
-            <div class="model-card" id="trials-semantic-card">
-                <div class="model-header">
-                    <h3>🧠 Semantic RAG (Qdrant)</h3>
-                    <span class="model-badge badge-llm">sentence-transformers</span>
-                </div>
-                <div class="meta-row" id="trials-semantic-meta"></div>
-                <div class="trial-list" id="trials-semantic-body"></div>
+        <div class="card ner-input-section">
+          <label class="ner-input-label" for="ner-text">Patient Description</label>
+          <textarea id="ner-text" class="field-input" rows="4"
+            placeholder="Paste a patient description here…">I am 47, I have had Type 2 diabetes for 6 years, I take metformin, and I was recently told my kidneys are showing early signs of damage. I live in Chicago.</textarea>
+          <div class="ner-actions">
+            <button class="btn btn-primary" id="compare-btn" onclick="runComparison()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/>
+                <polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/>
+              </svg>
+              Compare Both Models
+            </button>
+            <div class="diff-legend">
+              <div class="diff-swatch"></div>
+              Highlighted rows = models disagree
             </div>
+            <span class="ner-status" id="ner-status"></span>
+          </div>
+        </div>
 
-            <div class="model-card" id="trials-keyword-card">
-                <div class="model-header">
-                    <h3>🔍 Keyword Baseline (CT.gov API)</h3>
-                    <span class="model-badge badge-bert">BM25 / CT.gov</span>
-                </div>
-                <div class="meta-row" id="trials-keyword-meta"></div>
-                <div class="trial-list" id="trials-keyword-body"></div>
+        <div class="ner-grid" id="ner-results" style="display:none;">
+          <div class="card model-card" id="llm-card">
+            <div class="model-card-header">
+              <h3>LLM Extraction</h3>
+              <span class="badge badge-blue">Claude Sonnet</span>
             </div>
+            <div class="model-meta" id="llm-meta"></div>
+            <div id="llm-body"></div>
+          </div>
+          <div class="card model-card" id="bert-card">
+            <div class="model-card-header">
+              <h3>BioBERT Extraction</h3>
+              <span class="badge badge-green">dslim/bert-base-NER</span>
+            </div>
+            <div class="model-meta" id="bert-meta"></div>
+            <div id="bert-body"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ LAB REPORT VIEW ══════════════════════════════════════════════ -->
+    <div class="view" id="view-lab">
+      <div class="lab-wrap">
+        <div class="page-header" style="padding:0;">
+          <h2>Lab Report Analysis</h2>
+          <p>Upload a PDF lab report or paste raw values to extract biomarkers and get clinical reasoning.</p>
+        </div>
+
+        <!-- Upload card -->
+        <div class="card lab-upload-card">
+          <div class="lab-upload-grid">
+            <div>
+              <label class="lab-field-label">Upload PDF Lab Report</label>
+              <div class="drop-zone" id="drop-zone">
+                <input type="file" id="lab-file" accept=".pdf" onchange="handleFileSelect(this)" />
+                <div class="drop-zone-icon">📄</div>
+                <p id="drop-zone-label">Drop PDF here or click to browse</p>
+                <small>Accepts .pdf files</small>
+              </div>
+            </div>
+            <div>
+              <label class="lab-field-label">Or paste raw lab text</label>
+              <textarea id="lab-text" class="field-input" rows="5"
+                placeholder="Paste raw lab values, e.g.&#10;HbA1c: 9.1%&#10;eGFR: 52 mL/min&#10;Fasting Glucose: 182 mg/dL"></textarea>
+            </div>
+          </div>
+          <div style="margin-top:14px;">
+            <label class="lab-field-label">Symptoms (comma-separated, optional)</label>
+            <input type="text" id="lab-symptoms" class="field-input"
+              placeholder="e.g. fatigue, frequent urination, blurred vision" style="resize:none;" />
+          </div>
+          <div class="lab-actions">
+            <button class="btn btn-primary" id="lab-btn" onclick="analyzeReport()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              Analyze Report
+            </button>
+            <span id="lab-status"></span>
+          </div>
+        </div>
+
+        <!-- Results -->
+        <div class="lab-results" id="lab-results" style="display:none;">
+
+          <!-- Biomarkers table -->
+          <div class="card lab-section">
+            <h3>Biomarker Results</h3>
+            <div id="lab-biomarkers-table"></div>
+          </div>
+
+          <!-- Interpretation -->
+          <div class="card lab-section">
+            <h3>Biomarker Interpretation</h3>
+            <ol class="interp-list" id="lab-interpretation"></ol>
+          </div>
+
+          <!-- Conditions -->
+          <div class="card lab-section">
+            <h3>Suggested Conditions</h3>
+            <div class="condition-cards" id="lab-conditions"></div>
+          </div>
+
+          <!-- Trial-relevant values -->
+          <div class="card lab-section">
+            <h3>Trial-Relevant Findings</h3>
+            <ul class="trial-values-list" id="lab-trial-values"></ul>
+          </div>
+
+          <!-- Summary -->
+          <div class="summary-box">
+            <h3>Clinical Summary</h3>
+            <p id="lab-summary"></p>
+          </div>
+
+          <!-- Physician note -->
+          <div class="physician-note">
+            <div class="physician-note-icon">⚠️</div>
+            <p id="lab-physician-note"></p>
+          </div>
+
+          <!-- CTA -->
+          <button class="lab-cta-btn" onclick="goToTrialChat()">
+            🔍 Find Matching Trials Based on These Results
+          </button>
 
         </div>
+      </div>
     </div>
+
+    <!-- ══ TRIAL COMPARISON VIEW ════════════════════════════════════════ -->
+    <div class="view" id="view-trials">
+      <div class="trials-wrap">
+        <div class="page-header" style="padding:0;">
+          <h2>Trial Retrieval Comparison</h2>
+          <p>Compare semantic RAG (Qdrant) against keyword search (ClinicalTrials.gov API) side-by-side.</p>
+        </div>
+
+        <div class="card trials-query-card">
+          <label class="ner-input-label" for="trials-text">Clinical Query</label>
+          <textarea id="trials-text" class="field-input" rows="2"
+            placeholder="Enter a condition or clinical query…">Type 2 diabetes with early-stage kidney disease</textarea>
+          <div class="trials-actions">
+            <button class="btn btn-primary" id="trials-compare-btn" onclick="runTrialComparison()">
+              Compare Retrieval Methods
+            </button>
+            <div class="overlap-legend">
+              <div class="legend-item"><div class="legend-swatch swatch-both"></div><span style="color:#92400e">Both results</span></div>
+              <div class="legend-item"><div class="legend-swatch swatch-left"></div><span style="color:#1d4ed8">Semantic only</span></div>
+              <div class="legend-item"><div class="legend-swatch swatch-right"></div><span style="color:#166534">Keyword only</span></div>
+            </div>
+            <span id="trials-status"></span>
+          </div>
+        </div>
+
+        <div class="trials-grid" id="trials-results" style="display:none;">
+
+          <div class="card trials-panel" id="trials-semantic-card">
+            <div class="trials-panel-header">
+              <h3>Semantic RAG</h3>
+              <span class="badge badge-blue">Qdrant · MiniLM</span>
+            </div>
+            <div class="trials-panel-meta" id="trials-semantic-meta"></div>
+            <div class="trial-list" id="trials-semantic-body"></div>
+          </div>
+
+          <div class="card trials-panel" id="trials-keyword-card">
+            <div class="trials-panel-header">
+              <h3>Keyword Baseline</h3>
+              <span class="badge badge-green">ClinicalTrials.gov API</span>
+            </div>
+            <div class="trials-panel-meta" id="trials-keyword-meta"></div>
+            <div class="trial-list" id="trials-keyword-body"></div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </main>
 </div>
 
+<!-- ══════════════════════════════════════════════════════════════════════
+     JavaScript
+══════════════════════════════════════════════════════════════════════ -->
 <script>
-// ── Tab switching ─────────────────────────────────────────────────────────
-function switchTab(name, btn) {
-    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById('view-' + name).classList.add('active');
-    btn.classList.add('active');
-    document.getElementById('new-btn').style.display = name === 'chat' ? '' : 'none';
+'use strict';
+
+/* ── Toast ─────────────────────────────────────────────────────────────── */
+function toast(msg, type = 'info', duration = 4000) {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  const icon = { success: '✓', error: '✕', warn: '⚠', info: 'ℹ' }[type] || 'ℹ';
+  el.innerHTML = `<span>${icon}</span> ${msg}`;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(() => {
+    el.style.animation = 'toastOut .25s ease forwards';
+    setTimeout(() => el.remove(), 260);
+  }, duration);
 }
 
-// ── Chat ──────────────────────────────────────────────────────────────────
+/* ── Markdown renderer ─────────────────────────────────────────────────── */
+function renderMarkdown(raw) {
+  // Escape HTML first
+  let t = raw
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+
+  // Code blocks (``` ... ```)
+  t = t.replace(/```[\s\S]*?```/g, m => {
+    const code = m.slice(3, -3).replace(/^\w+\n/, '');
+    return `<pre style="background:var(--gray-100);border-radius:6px;padding:10px 12px;overflow-x:auto;font-size:12.5px;margin:8px 0;"><code>${code}</code></pre>`;
+  });
+
+  // Headings
+  t = t.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+  t = t.replace(/^## (.+)$/gm,  '<h3>$1</h3>');
+  t = t.replace(/^# (.+)$/gm,   '<h3>$1</h3>');
+
+  // Bold + italic
+  t = t.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+  t = t.replace(/\*\*(.+?)\*\*/g,     '<strong>$1</strong>');
+  t = t.replace(/\*(.+?)\*/g,         '<em>$1</em>');
+
+  // Inline code
+  t = t.replace(/`(.+?)`/g, '<code>$1</code>');
+
+  // HR
+  t = t.replace(/^---+$/gm, '<hr>');
+
+  // Numbered lists
+  t = t.replace(/(?:^\d+\. .+$\n?)+/gm, block => {
+    const items = block.trim().split('\n').map(l => `<li>${l.replace(/^\d+\. /, '')}</li>`).join('');
+    return `<ol>${items}</ol>`;
+  });
+
+  // Bullet lists
+  t = t.replace(/(?:^[*\-] .+$\n?)+/gm, block => {
+    const items = block.trim().split('\n').map(l => `<li>${l.replace(/^[*\-] /, '')}</li>`).join('');
+    return `<ul>${items}</ul>`;
+  });
+
+  // Line breaks
+  t = t.replace(/\n/g, '<br>');
+  return t;
+}
+
+/* ── Navigation ────────────────────────────────────────────────────────── */
+function switchView(name, btn) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  if (btn) btn.classList.add('active');
+}
+
+/* ── Health check ──────────────────────────────────────────────────────── */
+async function checkHealth() {
+  const dot    = document.getElementById('health-dot');
+  const label  = document.getElementById('health-label');
+  const detail = document.getElementById('health-detail');
+  try {
+    const res  = await fetch('/health');
+    const data = await res.json();
+    dot.classList.remove('pulsing', 'error', 'warn', 'ok');
+    if (data.status === 'ok') {
+      if (data.semantic_retriever) {
+        dot.classList.add('ok');
+        label.textContent  = 'Backend ready';
+        detail.textContent = `${data.collection_size.toLocaleString()} trials indexed`;
+      } else {
+        dot.classList.add('warn');
+        label.textContent  = 'Partial — no Qdrant';
+        detail.textContent = 'Run ingest_qdrant.py';
+      }
+    } else {
+      dot.classList.add('error');
+      label.textContent  = 'Backend error';
+      detail.textContent = '';
+    }
+  } catch {
+    dot.classList.remove('pulsing', 'ok', 'warn');
+    dot.classList.add('error');
+    label.textContent  = 'Backend offline';
+    detail.textContent = 'Start uvicorn first';
+  }
+}
+checkHealth();
+setInterval(checkHealth, 30000);
+
+/* ══════════════════════════════════════════════════════════════════════════
+   CHAT
+══════════════════════════════════════════════════════════════════════════ */
 let sessionId = null;
 let isLoading = false;
+let chatSettings = { method: 'semantic', reranker: true };
 
-const inputEl  = document.getElementById('user-input');
-const sendBtn  = document.getElementById('send-btn');
-const msgsEl   = document.getElementById('messages');
-const chatArea = document.getElementById('chat-area');
+const inputEl   = document.getElementById('user-input');
+const sendBtn   = document.getElementById('send-btn');
+const msgsEl    = document.getElementById('messages');
+const chatArea  = document.getElementById('chat-messages');
 
+// Auto-grow textarea
 inputEl.addEventListener('input', function () {
-    this.style.height = 'auto';
-    this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+  this.style.height = 'auto';
+  this.style.height = Math.min(this.scrollHeight, 130) + 'px';
 });
-inputEl.addEventListener('keydown', function (e) {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+inputEl.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
 });
+inputEl.focus();
 
 function useChip(el) {
-    inputEl.value = el.textContent.trim();
-    inputEl.dispatchEvent(new Event('input'));
-    inputEl.focus();
+  inputEl.value = el.textContent.trim();
+  inputEl.dispatchEvent(new Event('input'));
+  inputEl.focus();
 }
 
-function renderMarkdown(raw) {
-    let t = raw.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    t = t.replace(/^---+$/gm, '<hr>');
-    t = t.replace(/^#{1,3} (.+)$/gm, '<strong>$1</strong>');
-    t = t.replace(/^\* (.+)$/gm, '<li>$1</li>');
-    t = t.replace(/^- (.+)$/gm,  '<li>$1</li>');
-    t = t.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-    t = t.replace(/\*(.+?)\*/g,     '<em>$1</em>');
-    t = t.replace(/`(.+?)`/g,       '<code>$1</code>');
-    t = t.replace(/\n/g, '<br>');
-    return t;
+function toggleSettings() {
+  const panel  = document.getElementById('chat-settings');
+  const toggle = document.getElementById('settings-toggle');
+  const open   = panel.classList.toggle('open');
+  toggle.classList.toggle('active', open);
+}
+
+function setMethod(m) {
+  chatSettings.method = m;
+  document.getElementById('pill-semantic').classList.toggle('active', m === 'semantic');
+  document.getElementById('pill-keyword').classList.toggle('active',  m === 'keyword');
 }
 
 function hideWelcome() {
-    const w = document.getElementById('welcome');
-    if (w) w.remove();
+  const w = document.getElementById('welcome');
+  if (w) w.remove();
 }
-function scrollBottom() { chatArea.scrollTop = chatArea.scrollHeight; }
+
+function scrollBottom() {
+  chatArea.scrollTop = chatArea.scrollHeight;
+}
 
 function appendMessage(role, html, trialsFound, isError) {
-    hideWelcome();
-    const wrap = document.createElement('div');
-    wrap.className = `message ${role}`;
-    const badge = trialsFound != null
-        ? `<div class="trials-badge">✓ ${trialsFound} matching trial${trialsFound !== 1 ? 's' : ''} found</div>`
-        : '';
-    wrap.innerHTML = `
-        <div class="avatar ${role}">${role === 'user' ? '👤' : '⚕'}</div>
-        <div class="bubble${isError ? ' error' : ''}">${badge}<div>${html}</div></div>`;
-    msgsEl.appendChild(wrap);
-    scrollBottom();
+  hideWelcome();
+  const wrap = document.createElement('div');
+  wrap.className = `message ${role}`;
+  const badge = trialsFound != null
+    ? `<div class="trials-found-badge">✓ ${trialsFound} matching trial${trialsFound !== 1 ? 's' : ''} found</div>`
+    : '';
+  wrap.innerHTML = `
+    <div class="avatar ${role}">${role === 'user' ? '👤' : '⚕'}</div>
+    <div class="bubble${isError ? ' is-error' : ''}">${badge}<div>${html}</div></div>`;
+  msgsEl.appendChild(wrap);
+  scrollBottom();
 }
 
 function showLoading() {
-    hideWelcome();
-    const wrap = document.createElement('div');
-    wrap.className = 'message assistant';
-    wrap.id = 'loading-indicator';
-    wrap.innerHTML = `
-        <div class="avatar assistant">⚕</div>
-        <div class="bubble"><div class="loading-dots"><span></span><span></span><span></span></div></div>`;
-    msgsEl.appendChild(wrap);
-    scrollBottom();
+  hideWelcome();
+  const wrap = document.createElement('div');
+  wrap.className = 'message assistant';
+  wrap.id = 'loading-msg';
+  wrap.innerHTML = `
+    <div class="avatar assistant">⚕</div>
+    <div class="bubble"><div class="typing-indicator"><span></span><span></span><span></span></div></div>`;
+  msgsEl.appendChild(wrap);
+  scrollBottom();
 }
 function removeLoading() {
-    const el = document.getElementById('loading-indicator');
-    if (el) el.remove();
+  const el = document.getElementById('loading-msg');
+  if (el) el.remove();
 }
 
 async function sendMessage() {
-    if (isLoading) return;
-    const text = inputEl.value.trim();
-    if (!text) return;
-    appendMessage('user', renderMarkdown(text));
-    inputEl.value = ''; inputEl.style.height = 'auto';
-    isLoading = true; sendBtn.disabled = true;
-    showLoading();
-    try {
-        const res = await fetch('/chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: text, session_id: sessionId,
-                                   retrieval_method: 'semantic', use_reranker: true }),
-        });
-        if (!res.ok) throw new Error(`Server ${res.status}: ${await res.text()}`);
-        const data = await res.json();
-        sessionId = data.session_id;
-        removeLoading();
-        appendMessage('assistant', renderMarkdown(data.response), data.trials_found, false);
-    } catch (err) {
-        removeLoading();
-        appendMessage('assistant', `Sorry, something went wrong.<br><code>${err.message}</code>`, null, true);
-    } finally {
-        isLoading = false; sendBtn.disabled = false; inputEl.focus();
-    }
+  if (isLoading) return;
+  const text = inputEl.value.trim();
+  if (!text) return;
+  appendMessage('user', renderMarkdown(text));
+  inputEl.value = '';
+  inputEl.style.height = 'auto';
+  isLoading = true;
+  sendBtn.disabled = true;
+  showLoading();
+
+  try {
+    const res = await fetch('/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: text,
+        session_id: sessionId,
+        retrieval_method: chatSettings.method,
+        use_reranker: chatSettings.reranker,
+      }),
+    });
+    if (!res.ok) throw new Error(`Server ${res.status}: ${await res.text()}`);
+    const data = await res.json();
+    sessionId = data.session_id;
+    removeLoading();
+    appendMessage('assistant', renderMarkdown(data.response), data.trials_found, false);
+  } catch (err) {
+    removeLoading();
+    appendMessage('assistant', `Something went wrong.<br><code>${err.message}</code>`, null, true);
+    toast(err.message, 'error');
+  } finally {
+    isLoading = false;
+    sendBtn.disabled = false;
+    inputEl.focus();
+  }
 }
 
 function newChat() {
-    sessionId = null;
-    msgsEl.innerHTML = `
-        <div class="welcome" id="welcome">
-            <h2>Find Clinical Trials That Match You</h2>
-            <p>Describe your health situation in plain language — your age, conditions, medications, and location — and I'll find recruiting trials that may be relevant to you.</p>
-            <div class="chips">
-                <div class="chip" onclick="useChip(this)">I have Type 2 diabetes and live in Chicago</div>
-                <div class="chip" onclick="useChip(this)">I was diagnosed with breast cancer, I'm 48, in Naperville</div>
-                <div class="chip" onclick="useChip(this)">I have Parkinson's disease, male, 67, Evanston IL</div>
-            </div>
-        </div>`;
-    inputEl.focus();
+  sessionId = null;
+  msgsEl.innerHTML = `
+    <div class="welcome-screen" id="welcome">
+      <div class="welcome-icon">⚕</div>
+      <h2>Find Clinical Trials That Match You</h2>
+      <p>Describe your health situation in plain language — your age, conditions, medications, and location — and I'll find recruiting trials that may be relevant to you.</p>
+      <div class="prompt-chips">
+        <div class="prompt-chip" onclick="useChip(this)">I have Type 2 diabetes and live in Chicago</div>
+        <div class="prompt-chip" onclick="useChip(this)">Breast cancer diagnosed, I'm 48, in Naperville</div>
+        <div class="prompt-chip" onclick="useChip(this)">Parkinson's disease, male, 67, Evanston IL</div>
+      </div>
+    </div>`;
+  inputEl.focus();
 }
 
-inputEl.focus();
-
-// ── NER Comparison ────────────────────────────────────────────────────────
-const FIELDS = [
-    { key: 'age',                label: 'Age',               type: 'scalar' },
-    { key: 'gender',             label: 'Gender',            type: 'scalar' },
-    { key: 'conditions',         label: 'Conditions',        type: 'list'   },
-    { key: 'medications',        label: 'Medications',       type: 'list'   },
-    { key: 'lab_values',         label: 'Lab Values',        type: 'dict'   },
-    { key: 'prior_treatments',   label: 'Prior Treatments',  type: 'list'   },
-    { key: 'devices',            label: 'Devices',           type: 'list'   },
-    { key: 'location_city',      label: 'City',              type: 'scalar' },
-    { key: 'location_state',     label: 'State',             type: 'scalar' },
-    { key: 'disease_status',     label: 'Disease Status',    type: 'scalar' },
-    { key: 'healthy_volunteer',  label: 'Healthy Volunteer', type: 'boolean'},
-    { key: 'missing_fields',     label: 'Missing Fields',    type: 'list'   },
+/* ══════════════════════════════════════════════════════════════════════════
+   NER COMPARISON
+══════════════════════════════════════════════════════════════════════════ */
+const NER_FIELDS = [
+  { key:'age',               label:'Age',               type:'scalar'  },
+  { key:'gender',            label:'Gender',            type:'scalar'  },
+  { key:'conditions',        label:'Conditions',        type:'list'    },
+  { key:'medications',       label:'Medications',       type:'list'    },
+  { key:'lab_values',        label:'Lab Values',        type:'dict'    },
+  { key:'prior_treatments',  label:'Prior Treatments',  type:'list'    },
+  { key:'devices',           label:'Devices',           type:'list'    },
+  { key:'location_city',     label:'City',              type:'scalar'  },
+  { key:'location_state',    label:'State',             type:'scalar'  },
+  { key:'disease_status',    label:'Disease Status',    type:'scalar'  },
+  { key:'healthy_volunteer', label:'Healthy Volunteer', type:'boolean' },
+  { key:'missing_fields',    label:'Missing Fields',    type:'list'    },
 ];
 
-function canonicalize(val, type) {
-    if (type === 'list') {
-        const arr = Array.isArray(val) ? val : [];
-        return arr.map(v => String(v).toLowerCase().trim()).sort().join('|');
-    }
-    if (type === 'dict') {
-        const obj = (val && typeof val === 'object') ? val : {};
-        return Object.entries(obj).map(([k,v]) => `${k.toLowerCase()}:${String(v).toLowerCase()}`).sort().join('|');
-    }
-    if (type === 'boolean') return String(val === true);
-    return String(val ?? '').toLowerCase().trim();
+function nerCanon(val, type) {
+  if (type === 'list')    return (Array.isArray(val) ? val : []).map(v => String(v).toLowerCase().trim()).sort().join('|');
+  if (type === 'dict')    return Object.entries(val && typeof val === 'object' ? val : {}).map(([k,v]) => `${k.toLowerCase()}:${String(v).toLowerCase()}`).sort().join('|');
+  if (type === 'boolean') return String(val === true);
+  return String(val ?? '').toLowerCase().trim();
 }
 
-function renderValue(val, type) {
-    if (type === 'list') {
-        const arr = Array.isArray(val) ? val : [];
-        if (!arr.length) return '<span class="val-empty">—</span>';
-        return '<ul class="val-list">' + arr.map(v => `<li>${v}</li>`).join('') + '</ul>';
-    }
-    if (type === 'dict') {
-        const obj = (val && typeof val === 'object') ? val : {};
-        const entries = Object.entries(obj);
-        if (!entries.length) return '<span class="val-empty">—</span>';
-        return '<ul class="val-list">' + entries.map(([k,v]) => `<li><strong>${k}:</strong> ${v}</li>`).join('') + '</ul>';
-    }
-    if (type === 'boolean') return val ? 'Yes' : 'No';
-    const s = val != null ? String(val) : '';
-    return s ? s : '<span class="val-empty">—</span>';
+function nerRenderValue(val, type) {
+  if (type === 'list') {
+    const arr = Array.isArray(val) ? val : [];
+    if (!arr.length) return '<span class="val-empty">—</span>';
+    return '<ul class="val-list">' + arr.map(v => `<li>${v}</li>`).join('') + '</ul>';
+  }
+  if (type === 'dict') {
+    const entries = Object.entries(val && typeof val === 'object' ? val : {});
+    if (!entries.length) return '<span class="val-empty">—</span>';
+    return '<ul class="val-list">' + entries.map(([k,v]) => `<li><strong>${k}:</strong> ${v}</li>`).join('') + '</ul>';
+  }
+  if (type === 'boolean') return val ? 'Yes' : 'No';
+  const s = val != null ? String(val) : '';
+  return s || '<span class="val-empty">—</span>';
 }
 
-function countExtracted(profile) {
-    if (!profile) return 0;
-    let n = 0;
-    if (profile.age != null) n++;
-    if (profile.gender) n++;
-    if (profile.conditions?.length) n++;
-    if (profile.medications?.length) n++;
-    if (Object.keys(profile.lab_values || {}).length) n++;
-    if (profile.prior_treatments?.length) n++;
-    if (profile.devices?.length) n++;
-    if (profile.location_city) n++;
-    if (profile.location_state) n++;
-    if (profile.disease_status) n++;
-    return n;
+function nerCountExtracted(profile) {
+  if (!profile) return 0;
+  let n = 0;
+  if (profile.age != null) n++;
+  if (profile.gender) n++;
+  if (profile.conditions?.length) n++;
+  if (profile.medications?.length) n++;
+  if (Object.keys(profile.lab_values || {}).length) n++;
+  if (profile.prior_treatments?.length) n++;
+  if (profile.devices?.length) n++;
+  if (profile.location_city) n++;
+  if (profile.location_state) n++;
+  if (profile.disease_status) n++;
+  return n;
 }
 
-function buildTable(profile, missingFields, diffSet) {
-    const allFields = FIELDS.map(f => {
-        if (f.key === 'missing_fields') return { ...f, val: missingFields };
-        return { ...f, val: profile[f.key] };
-    });
-
-    return '<table class="field-table">' +
-        allFields.map(f => {
-            const differs = diffSet.has(f.key);
-            return `<tr class="${differs ? 'differs' : ''}">
-                <td>${f.label}</td>
-                <td>${renderValue(f.val, f.type)}</td>
-            </tr>`;
-        }).join('') +
-        '</table>';
+function nerBuildTable(profile, missingFields, diffSet) {
+  return '<table class="field-table">' +
+    NER_FIELDS.map(f => {
+      const val     = f.key === 'missing_fields' ? missingFields : profile[f.key];
+      const differs = diffSet.has(f.key);
+      return `<tr class="${differs ? 'diff-row' : ''}">
+        <td>${f.label}</td>
+        <td>${nerRenderValue(val, f.type)}</td>
+      </tr>`;
+    }).join('') +
+    '</table>';
 }
 
 async function runComparison() {
-    const text = document.getElementById('ner-text').value.trim();
-    if (!text) return;
+  const text = document.getElementById('ner-text').value.trim();
+  if (!text) { toast('Please enter a patient description.', 'warn'); return; }
 
-    const btn = document.getElementById('compare-btn');
-    const status = document.getElementById('ner-status');
-    btn.disabled = true;
-    status.textContent = 'Running both models…';
+  const btn    = document.getElementById('compare-btn');
+  const status = document.getElementById('ner-status');
+  btn.disabled = true;
+  status.textContent = 'Running both models…';
+  document.getElementById('ner-results').style.display = 'none';
+
+  // Show skeleton placeholders
+  document.getElementById('ner-results').style.display = 'grid';
+  ['llm-meta','bert-meta'].forEach(id => {
+    document.getElementById(id).innerHTML = '<div class="skeleton" style="height:14px;width:180px;"></div>';
+  });
+  ['llm-body','bert-body'].forEach(id => {
+    document.getElementById(id).innerHTML =
+      '<div style="padding:12px 18px;display:flex;flex-direction:column;gap:8px;">' +
+      Array.from({length:6}, () => `<div class="skeleton" style="height:13px;width:${Math.floor(Math.random()*40+50)}%;"></div>`).join('') +
+      '</div>';
+  });
+
+  try {
+    const res  = await fetch('/compare-ner', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text }),
+    });
+    if (!res.ok) throw new Error(`Server ${res.status}: ${await res.text()}`);
+    const data = await res.json();
+
+    // Compute diffs
+    const diffSet = new Set();
+    NER_FIELDS.forEach(f => {
+      const llmVal = f.key === 'missing_fields' ? data.llm.missing_fields  : data.llm.profile?.[f.key];
+      const bioVal = f.key === 'missing_fields' ? data.bioBERT.missing_fields : data.bioBERT.profile?.[f.key];
+      if (nerCanon(llmVal, f.type) !== nerCanon(bioVal, f.type)) diffSet.add(f.key);
+    });
+
+    status.textContent = `Done · ${diffSet.size} field${diffSet.size !== 1 ? 's' : ''} differ`;
+
+    // LLM card
+    const llmCount = nerCountExtracted(data.llm.profile);
+    document.getElementById('llm-meta').innerHTML =
+      `<span>⏱ <strong>${data.llm.time_seconds}s</strong></span>
+       <span>📊 <strong>${llmCount}/10</strong> fields extracted</span>`;
+    document.getElementById('llm-body').innerHTML = data.llm.error
+      ? `<div class="model-err">Error: ${data.llm.error}</div>`
+      : nerBuildTable(data.llm.profile, data.llm.missing_fields, diffSet);
+
+    // BioBERT card
+    const bioCount = nerCountExtracted(data.bioBERT.profile);
+    document.getElementById('bert-meta').innerHTML =
+      `<span>⏱ <strong>${data.bioBERT.time_seconds}s</strong></span>
+       <span>📊 <strong>${bioCount}/10</strong> fields extracted</span>`;
+    document.getElementById('bert-body').innerHTML = data.bioBERT.error
+      ? `<div class="model-err">Error: ${data.bioBERT.error}</div>`
+      : nerBuildTable(data.bioBERT.profile, data.bioBERT.missing_fields, diffSet);
+
+    toast(`Comparison done — ${diffSet.size} fields differ`, 'success');
+  } catch (err) {
+    status.textContent = `Error: ${err.message}`;
+    toast(err.message, 'error');
     document.getElementById('ner-results').style.display = 'none';
-
-    try {
-        const res = await fetch('/compare-ner', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ text }),
-        });
-        if (!res.ok) throw new Error(`Server ${res.status}: ${await res.text()}`);
-        const data = await res.json();
-
-        // Compute which fields differ
-        const diffSet = new Set();
-        FIELDS.forEach(f => {
-            const key = f.key === 'missing_fields' ? 'missing_fields' : f.key;
-            const llmVal  = f.key === 'missing_fields' ? data.llm.missing_fields  : data.llm.profile?.[f.key];
-            const bioVal  = f.key === 'missing_fields' ? data.bioBERT.missing_fields : data.bioBERT.profile?.[f.key];
-            if (canonicalize(llmVal, f.type) !== canonicalize(bioVal, f.type)) diffSet.add(f.key);
-        });
-
-        const diffCount = diffSet.size;
-        status.textContent = `Done · ${diffCount} field${diffCount !== 1 ? 's' : ''} differ`;
-
-        // LLM card
-        const llmCount = countExtracted(data.llm.profile);
-        document.getElementById('llm-meta').innerHTML =
-            `<span>⏱ <strong>${data.llm.time_seconds}s</strong></span>
-             <span>📊 <strong>${llmCount}/10</strong> fields extracted</span>`;
-
-        document.getElementById('llm-body').innerHTML = data.llm.error
-            ? `<div class="model-error">Error: ${data.llm.error}</div>`
-            : buildTable(data.llm.profile, data.llm.missing_fields, diffSet);
-
-        // BioBERT card
-        const bioCount = countExtracted(data.bioBERT.profile);
-        document.getElementById('bert-meta').innerHTML =
-            `<span>⏱ <strong>${data.bioBERT.time_seconds}s</strong></span>
-             <span>📊 <strong>${bioCount}/10</strong> fields extracted</span>`;
-
-        document.getElementById('bert-body').innerHTML = data.bioBERT.error
-            ? `<div class="model-error">Error: ${data.bioBERT.error}</div>`
-            : buildTable(data.bioBERT.profile, data.bioBERT.missing_fields, diffSet);
-
-        document.getElementById('ner-results').style.display = 'grid';
-
-    } catch (err) {
-        status.textContent = `Error: ${err.message}`;
-    } finally {
-        btn.disabled = false;
-    }
+  } finally {
+    btn.disabled = false;
+  }
 }
 
-// ── Lab Report ────────────────────────────────────────────────────────────
+/* ══════════════════════════════════════════════════════════════════════════
+   LAB REPORT
+══════════════════════════════════════════════════════════════════════════ */
 let labSessionId = null;
 let labSuggestedConditions = [];
 
+// Drag & drop setup
+const dropZone = document.getElementById('drop-zone');
+const fileInput = document.getElementById('lab-file');
+
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file && file.name.endsWith('.pdf')) {
+    // Assign to file input via DataTransfer
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    fileInput.files = dt.files;
+    handleFileSelect(fileInput);
+  } else {
+    toast('Please drop a PDF file.', 'warn');
+  }
+});
+
+function handleFileSelect(input) {
+  const file = input.files[0];
+  if (!file) return;
+  dropZone.classList.add('has-file');
+  document.getElementById('drop-zone-label').textContent = `📎 ${file.name}`;
+}
+
 async function analyzeReport() {
-    const fileInput   = document.getElementById('lab-file');
-    const labText     = document.getElementById('lab-text').value.trim();
-    const symptoms    = document.getElementById('lab-symptoms').value.trim();
-    const btn         = document.getElementById('lab-btn');
-    const status      = document.getElementById('lab-status');
+  const labText  = document.getElementById('lab-text').value.trim();
+  const symptoms = document.getElementById('lab-symptoms').value.trim();
+  const btn      = document.getElementById('lab-btn');
+  const status   = document.getElementById('lab-status');
 
-    if (!fileInput.files.length && !labText) {
-        status.textContent = 'Please upload a PDF or paste lab text.';
-        return;
+  if (!fileInput.files.length && !labText) {
+    toast('Please upload a PDF or paste lab text.', 'warn');
+    return;
+  }
+
+  btn.disabled = true;
+  status.textContent = 'Analyzing report…';
+  document.getElementById('lab-results').style.display = 'none';
+
+  try {
+    const formData = new FormData();
+    if (fileInput.files.length) formData.append('file', fileInput.files[0]);
+    if (labText)               formData.append('lab_text', labText);
+    if (symptoms)              formData.append('symptoms', symptoms);
+    if (labSessionId)          formData.append('session_id', labSessionId);
+
+    const res  = await fetch('/analyze-report', { method:'POST', body:formData });
+    const data = await res.json();
+
+    if (data.error) {
+      status.textContent = `Error: ${data.error}`;
+      toast(data.error, 'error');
+      return;
     }
 
-    btn.disabled = true;
-    status.textContent = 'Analyzing…';
-    document.getElementById('lab-results').style.display = 'none';
+    labSessionId = data.session_id;
+    labSuggestedConditions = (data.suggested_conditions || []).map(c => c.condition);
+    status.textContent = `Found ${data.biomarkers_found} biomarker${data.biomarkers_found !== 1 ? 's' : ''}`;
 
-    try {
-        const formData = new FormData();
-        if (fileInput.files.length) formData.append('file', fileInput.files[0]);
-        if (labText)               formData.append('lab_text', labText);
-        if (symptoms)              formData.append('symptoms', symptoms);
-        if (labSessionId)          formData.append('session_id', labSessionId);
+    renderLabResults(data);
+    document.getElementById('lab-results').style.display = 'flex';
+    toast(`Extracted ${data.biomarkers_found} biomarkers successfully`, 'success');
+  } catch (err) {
+    status.textContent = `Error: ${err.message}`;
+    toast(err.message, 'error');
+  } finally {
+    btn.disabled = false;
+  }
+}
 
-        const res  = await fetch('/analyze-report', { method: 'POST', body: formData });
-        const data = await res.json();
+function renderLabResults(data) {
+  const statusColorMap = { HIGH:'status-HIGH', LOW:'status-LOW', NORMAL:'status-NORMAL', UNKNOWN:'status-UNKNOWN' };
 
-        if (data.error) { status.textContent = `Error: ${data.error}`; return; }
-
-        labSessionId = data.session_id;
-        labSuggestedConditions = (data.suggested_conditions || []).map(c => c.condition);
-
-        status.textContent = `Found ${data.biomarkers_found} biomarker${data.biomarkers_found !== 1 ? 's' : ''}`;
-
-        // Biomarkers table
-        const statusColor = { HIGH: '#fef2f2', LOW: '#eff6ff', NORMAL: '#f0fdf4', UNKNOWN: '#f9fafb' };
-        const statusText  = { HIGH: '#991b1b', LOW: '#1e40af', NORMAL: '#166534', UNKNOWN: '#6b7280' };
-        let tableHtml = `<table style="width:100%;border-collapse:collapse;font-size:13px;">
-            <thead><tr style="background:#f9fafb;">
-                <th style="padding:8px 12px;text-align:left;font-weight:600;color:#374151;border-bottom:1px solid #e5e7eb;">Biomarker</th>
-                <th style="padding:8px 12px;text-align:left;font-weight:600;color:#374151;border-bottom:1px solid #e5e7eb;">Value</th>
-                <th style="padding:8px 12px;text-align:left;font-weight:600;color:#374151;border-bottom:1px solid #e5e7eb;">Unit</th>
-                <th style="padding:8px 12px;text-align:left;font-weight:600;color:#374151;border-bottom:1px solid #e5e7eb;">Ref Range</th>
-                <th style="padding:8px 12px;text-align:left;font-weight:600;color:#374151;border-bottom:1px solid #e5e7eb;">Status</th>
-            </tr></thead><tbody>`;
-        for (const [name, info] of Object.entries(data.biomarkers)) {
-            const s   = info.status || 'UNKNOWN';
-            const bg  = statusColor[s] || '#f9fafb';
-            const col = statusText[s]  || '#374151';
-            tableHtml += `<tr style="background:${bg};">
-                <td style="padding:8px 12px;font-weight:500;color:#111827;">${name}</td>
-                <td style="padding:8px 12px;">${info.value || '—'}</td>
-                <td style="padding:8px 12px;color:#6b7280;">${info.unit || '—'}</td>
-                <td style="padding:8px 12px;color:#6b7280;">${info.reference_range || '—'}</td>
-                <td style="padding:8px 12px;font-weight:600;color:${col};">${s}</td>
-            </tr>`;
-        }
-        tableHtml += '</tbody></table>';
-        document.getElementById('lab-biomarkers-table').innerHTML = data.biomarkers_found ? tableHtml : '<p style="color:#6b7280;font-size:13px;">No biomarkers extracted.</p>';
-
-        // Interpretation list
-        const interp = document.getElementById('lab-interpretation');
-        interp.innerHTML = (data.biomarker_interpretation || [])
-            .map(i => `<li style="margin-bottom:6px;"><strong>${i.biomarker}:</strong> ${i.finding} — <em>${i.clinical_significance}</em></li>`)
-            .join('') || '<li>No interpretation available.</li>';
-
-        // Suggested conditions
-        const condEl = document.getElementById('lab-conditions');
-        const confColor = { high: '#dcfce7', medium: '#fef9c3', low: '#f3f4f6' };
-        const confText  = { high: '#166534', medium: '#854d0e', low: '#6b7280' };
-        condEl.innerHTML = (data.suggested_conditions || []).map(c => {
-            const cc = (c.confidence || 'low').toLowerCase();
-            return `<div style="border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;">
-                <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-                    <span style="font-weight:600;font-size:14px;color:#111827;">${c.condition}</span>
-                    <span style="background:${confColor[cc]||'#f3f4f6'};color:${confText[cc]||'#374151'};font-size:11px;font-weight:700;padding:2px 8px;border-radius:100px;">${c.confidence?.toUpperCase()}</span>
-                </div>
-                <div style="font-size:12.5px;color:#6b7280;margin-bottom:4px;">Biomarkers: ${(c.supporting_biomarkers||[]).join(', ')||'—'}</div>
-                <div style="font-size:12.5px;color:#6b7280;">Symptoms: ${(c.supporting_symptoms||[]).join(', ')||'None reported'}</div>
-            </div>`;
-        }).join('') || '<p style="color:#6b7280;font-size:13px;">No conditions suggested.</p>';
-
-        // Trial-relevant values
-        const tvEl = document.getElementById('lab-trial-values');
-        tvEl.innerHTML = (data.trial_relevant_values || []).map(v => `<li style="margin-bottom:4px;">${v}</li>`).join('') || '<li>None identified.</li>';
-
-        // Summary + physician note
-        document.getElementById('lab-summary').textContent        = data.reasoning_summary || 'No summary available.';
-        document.getElementById('lab-physician-note').textContent  = data.physician_note   || '';
-
-        document.getElementById('lab-results').style.display = 'flex';
-
-    } catch (err) {
-        status.textContent = `Error: ${err.message}`;
-    } finally {
-        document.getElementById('lab-btn').disabled = false;
+  // ── Biomarkers table
+  if (data.biomarkers_found && data.biomarkers) {
+    let html = `<table class="bio-table">
+      <thead><tr>
+        <th>Biomarker</th><th>Value</th><th>Unit</th><th>Ref Range</th><th>Status</th>
+      </tr></thead><tbody>`;
+    for (const [name, info] of Object.entries(data.biomarkers)) {
+      const statusClass = statusColorMap[info.status] || 'status-UNKNOWN';
+      html += `<tr>
+        <td>${name}</td>
+        <td>${info.value || '—'}</td>
+        <td style="color:var(--gray-500)">${info.unit || '—'}</td>
+        <td style="color:var(--gray-500)">${info.reference_range || '—'}</td>
+        <td><span class="status-pill ${statusClass}">${info.status || 'UNKNOWN'}</span></td>
+      </tr>`;
     }
-}
+    html += '</tbody></table>';
+    document.getElementById('lab-biomarkers-table').innerHTML = html;
+  } else {
+    document.getElementById('lab-biomarkers-table').innerHTML =
+      '<p style="color:var(--gray-400);font-size:13px;">No biomarkers extracted.</p>';
+  }
 
-// ── Trial Retrieval Comparison ────────────────────────────────────────────
-function trialCardClass(nctId, overlapSet) {
-    return overlapSet.has(nctId) ? 'tc-both' : '';
-}
+  // ── Interpretation
+  const interp = document.getElementById('lab-interpretation');
+  interp.innerHTML = (data.biomarker_interpretation || []).map(i => `
+    <li class="interp-item">
+      <div class="interp-dot"></div>
+      <div class="interp-text">
+        <strong>${i.biomarker}:</strong> ${i.finding} — <em>${i.clinical_significance}</em>
+      </div>
+    </li>`).join('') || '<li style="color:var(--gray-400);font-size:13px;">No interpretation available.</li>';
 
-function renderPhase(phase) {
-    if (!phase || !phase.length) return '';
-    return `<span class="tc-badge tc-phase">${phase.join(', ')}</span>`;
-}
+  // ── Suggested conditions
+  const condEl = document.getElementById('lab-conditions');
+  const confLabel = { high:'HIGH', medium:'MEDIUM', low:'LOW' };
+  const confBadge = { high:'badge-green', medium:'badge-amber', low:'badge-gray' };
+  condEl.innerHTML = (data.suggested_conditions || []).map(c => {
+    const cc  = (c.confidence || 'low').toLowerCase();
+    const confClass = cc === 'high' ? 'conf-high' : cc === 'medium' ? 'conf-medium' : 'conf-low';
+    return `<div class="condition-card ${confClass}">
+      <div class="condition-card-header">
+        <span class="condition-name">${c.condition}</span>
+        <span class="badge ${confBadge[cc] || 'badge-gray'}">${confLabel[cc] || cc.toUpperCase()} CONFIDENCE</span>
+      </div>
+      <div class="condition-meta">
+        <span><strong>Biomarkers:</strong> ${(c.supporting_biomarkers||[]).join(', ')||'—'}</span>
+        <span><strong>Symptoms:</strong> ${(c.supporting_symptoms||[]).join(', ')||'None reported'}</span>
+      </div>
+      <div class="conf-bar-wrap"><div class="conf-bar"></div></div>
+    </div>`;
+  }).join('') || '<p style="color:var(--gray-400);font-size:13px;">No conditions suggested.</p>';
 
-function renderStatus(status) {
-    if (!status) return '';
-    return `<span class="tc-badge tc-status">${status}</span>`;
-}
+  // ── Trial-relevant values
+  const tvEl = document.getElementById('lab-trial-values');
+  tvEl.innerHTML = (data.trial_relevant_values || []).map(v => `<li>${v}</li>`).join('')
+    || '<li style="color:var(--gray-400);">None identified.</li>';
 
-function renderScore(trial, method) {
-    if (method === 'semantic' && trial.similarity_score != null) {
-        return `<div class="tc-score">Relevance score: ${trial.similarity_score.toFixed(3)}</div>`;
-    }
-    return '';
-}
-
-function renderSnippet(trial, method) {
-    let text = '';
-    if (method === 'semantic' && trial.chunk_text) {
-        text = trial.chunk_text;
-    } else if (trial.summary) {
-        text = trial.summary.slice(0, 300);
-    } else if (trial.eligibility_raw) {
-        text = trial.eligibility_raw.slice(0, 300);
-    }
-    if (!text) return '';
-    return `<div class="tc-snippet">${text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}…</div>`;
-}
-
-function buildTrialCard(trial, method, overlapSet) {
-    const nctId     = trial.nct_id || '';
-    const isShared  = overlapSet.has(nctId);
-    const cardClass = isShared ? 'tc-both' : (method === 'semantic' ? 'tc-left' : 'tc-right');
-    const titleHtml = trial.url
-        ? `<a href="${trial.url}" target="_blank" rel="noopener">${trial.title || nctId}</a>`
-        : (trial.title || nctId);
-
-    return `
-        <div class="trial-card ${cardClass}">
-            <div class="tc-header">
-                <span class="tc-nct">${nctId}</span>
-                ${renderPhase(trial.phase)}
-                ${renderStatus(trial.status)}
-                ${isShared ? '<span class="tc-badge tc-both-badge">✓ In Both</span>' : ''}
-            </div>
-            <div class="tc-title">${titleHtml}</div>
-            ${renderScore(trial, method)}
-            ${renderSnippet(trial, method)}
-            ${trial.conditions && trial.conditions.length
-                ? `<div class="tc-conditions">Conditions: ${trial.conditions.slice(0,4).join(', ')}</div>`
-                : ''}
-        </div>`;
-}
-
-function renderTrialPanel(trials, method, error, overlapSet, bodyEl, metaEl) {
-    if (error) {
-        bodyEl.innerHTML = `<div class="tc-error">Error: ${error}</div>`;
-        metaEl.innerHTML = '';
-        return;
-    }
-    if (!trials || !trials.length) {
-        bodyEl.innerHTML = '<div class="tc-empty">No results returned.</div>';
-        metaEl.innerHTML = '';
-        return;
-    }
-    const sharedCount = trials.filter(t => overlapSet.has(t.nct_id)).length;
-    metaEl.innerHTML = `<span>📋 <strong>${trials.length}</strong> trial${trials.length !== 1 ? 's' : ''}</span>
-                        <span>🔄 <strong>${sharedCount}</strong> shared with other method</span>`;
-    bodyEl.innerHTML = trials.map(t => buildTrialCard(t, method, overlapSet)).join('');
-}
-
-async function runTrialComparison() {
-    const query = document.getElementById('trials-text').value.trim();
-    if (!query) return;
-
-    const btn    = document.getElementById('trials-compare-btn');
-    const status = document.getElementById('trials-status');
-    btn.disabled = true;
-    status.textContent = 'Running both retrieval methods…';
-    document.getElementById('trials-results').style.display = 'none';
-
-    try {
-        const res = await fetch('/compare-trials', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ query, top_k: 5 }),
-        });
-        if (!res.ok) throw new Error(`Server ${res.status}: ${await res.text()}`);
-        const data = await res.json();
-
-        const semNctIds = new Set((data.semantic.trials || []).map(t => t.nct_id));
-        const kwNctIds  = new Set((data.keyword.trials  || []).map(t => t.nct_id));
-        const overlap   = new Set([...semNctIds].filter(id => kwNctIds.has(id)));
-
-        const overlapCount = overlap.size;
-        status.textContent = `Done · ${overlapCount} trial${overlapCount !== 1 ? 's' : ''} in both results`;
-
-        renderTrialPanel(
-            data.semantic.trials, 'semantic', data.semantic.error, overlap,
-            document.getElementById('trials-semantic-body'),
-            document.getElementById('trials-semantic-meta'),
-        );
-        document.getElementById('trials-semantic-meta').innerHTML +=
-            `<span>⏱ <strong>${data.semantic.time_seconds}s</strong></span>`;
-
-        renderTrialPanel(
-            data.keyword.trials, 'keyword', data.keyword.error, overlap,
-            document.getElementById('trials-keyword-body'),
-            document.getElementById('trials-keyword-meta'),
-        );
-        document.getElementById('trials-keyword-meta').innerHTML +=
-            `<span>⏱ <strong>${data.keyword.time_seconds}s</strong></span>`;
-
-        document.getElementById('trials-results').style.display = 'grid';
-
-    } catch (err) {
-        status.textContent = `Error: ${err.message}`;
-    } finally {
-        btn.disabled = false;
-    }
+  // ── Summary + note
+  document.getElementById('lab-summary').textContent       = data.reasoning_summary || 'No summary available.';
+  document.getElementById('lab-physician-note').textContent = data.physician_note   || '';
 }
 
 function goToTrialChat() {
-    const chatBtn = document.querySelector('.tab-btn');
-    switchTab('chat', chatBtn);
+  // Switch to chat tab
+  const chatNavBtn = document.querySelector('.nav-item[data-view="chat"]');
+  switchView('chat', chatNavBtn);
 
-    const condStr = labSuggestedConditions.length
-        ? labSuggestedConditions.join(', ')
-        : 'conditions from my lab report';
-    const msg = `I just uploaded my lab report. Based on the analysis, I may have: ${condStr}. Can you help me find clinical trials that match these findings?`;
+  const condStr = labSuggestedConditions.length
+    ? labSuggestedConditions.join(', ')
+    : 'conditions from my lab report';
+  inputEl.value = `I just uploaded my lab report. Based on the analysis, I may have: ${condStr}. Can you help me find clinical trials that match these findings?`;
+  inputEl.dispatchEvent(new Event('input'));
+  inputEl.focus();
+}
 
-    document.getElementById('user-input').value = msg;
-    document.getElementById('user-input').focus();
+/* ══════════════════════════════════════════════════════════════════════════
+   TRIAL RETRIEVAL COMPARISON
+══════════════════════════════════════════════════════════════════════════ */
+function buildTrialCard(trial, method, overlapSet) {
+  const nctId    = trial.nct_id || '';
+  const isShared = overlapSet.has(nctId);
+  const cardCls  = isShared ? 'tc-both' : (method === 'semantic' ? 'tc-left' : 'tc-right');
+  const titleEl  = trial.url
+    ? `<a href="${trial.url}" target="_blank" rel="noopener">${trial.title || nctId}</a>`
+    : (trial.title || nctId);
+
+  let scoreHtml = '';
+  if (method === 'semantic' && trial.similarity_score != null)
+    scoreHtml = `<div class="tc-score">Similarity: <strong>${trial.similarity_score.toFixed(3)}</strong></div>`;
+
+  let snippetText = '';
+  if (method === 'semantic' && trial.chunk_text) snippetText = trial.chunk_text;
+  else if (trial.summary)        snippetText = trial.summary.slice(0, 280);
+  else if (trial.eligibility_raw) snippetText = trial.eligibility_raw.slice(0, 280);
+  const snippetHtml = snippetText
+    ? `<div class="tc-snippet">${snippetText.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}…</div>`
+    : '';
+
+  const phaseBadge  = (trial.phase && trial.phase.length)
+    ? `<span class="badge badge-blue">${trial.phase.join(', ')}</span>` : '';
+  const statusBadge = trial.status
+    ? `<span class="badge badge-green">${trial.status}</span>` : '';
+  const bothBadge   = isShared
+    ? `<span class="badge badge-amber">✓ In Both</span>` : '';
+
+  return `<div class="trial-card ${cardCls}">
+    <div class="trial-card-header">
+      <span class="tc-nct">${nctId}</span>
+      ${phaseBadge}${statusBadge}${bothBadge}
+    </div>
+    <div class="tc-title">${titleEl}</div>
+    ${scoreHtml}
+    ${snippetHtml}
+    ${trial.conditions && trial.conditions.length
+      ? `<div class="tc-conditions">Conditions: ${trial.conditions.slice(0,4).join(', ')}</div>` : ''}
+  </div>`;
+}
+
+function renderTrialPanel(trials, method, error, overlapSet, bodyEl, metaEl, timeSec) {
+  if (error) {
+    bodyEl.innerHTML = `<div class="tc-error">Error: ${error}</div>`;
+    metaEl.innerHTML = '';
+    return;
+  }
+  if (!trials || !trials.length) {
+    bodyEl.innerHTML = '<div class="tc-empty">No results returned.</div>';
+    metaEl.innerHTML = '';
+    return;
+  }
+  const shared = trials.filter(t => overlapSet.has(t.nct_id)).length;
+  metaEl.innerHTML = `
+    <span>📋 <strong>${trials.length}</strong> trial${trials.length !== 1 ? 's' : ''}</span>
+    <span>🔄 <strong>${shared}</strong> shared</span>
+    <span>⏱ <strong>${timeSec}s</strong></span>`;
+  bodyEl.innerHTML = trials.map(t => buildTrialCard(t, method, overlapSet)).join('');
+}
+
+async function runTrialComparison() {
+  const query = document.getElementById('trials-text').value.trim();
+  if (!query) { toast('Please enter a clinical query.', 'warn'); return; }
+
+  const btn    = document.getElementById('trials-compare-btn');
+  const status = document.getElementById('trials-status');
+  btn.disabled = true;
+  status.textContent = 'Fetching from both methods…';
+
+  // Skeleton
+  document.getElementById('trials-results').style.display = 'grid';
+  ['trials-semantic-body','trials-keyword-body'].forEach(id => {
+    document.getElementById(id).innerHTML =
+      '<div style="padding:14px;display:flex;flex-direction:column;gap:10px;">' +
+      Array.from({length:3}, () => `
+        <div style="border:1px solid var(--gray-200);border-radius:var(--radius);padding:13px 14px;">
+          <div class="skeleton" style="height:12px;width:100px;margin-bottom:8px;"></div>
+          <div class="skeleton" style="height:15px;width:85%;margin-bottom:6px;"></div>
+          <div class="skeleton" style="height:11px;width:60%;"></div>
+        </div>`).join('') +
+      '</div>';
+  });
+  ['trials-semantic-meta','trials-keyword-meta'].forEach(id => {
+    document.getElementById(id).innerHTML = '<div class="skeleton" style="height:12px;width:150px;"></div>';
+  });
+
+  try {
+    const res = await fetch('/compare-trials', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query, top_k: 5 }),
+    });
+    if (!res.ok) throw new Error(`Server ${res.status}: ${await res.text()}`);
+    const data = await res.json();
+
+    const semIds  = new Set((data.semantic.trials || []).map(t => t.nct_id));
+    const kwIds   = new Set((data.keyword.trials  || []).map(t => t.nct_id));
+    const overlap = new Set([...semIds].filter(id => kwIds.has(id)));
+
+    status.textContent = `Done · ${overlap.size} trial${overlap.size !== 1 ? 's' : ''} in both results`;
+
+    renderTrialPanel(
+      data.semantic.trials, 'semantic', data.semantic.error, overlap,
+      document.getElementById('trials-semantic-body'),
+      document.getElementById('trials-semantic-meta'),
+      data.semantic.time_seconds,
+    );
+    renderTrialPanel(
+      data.keyword.trials, 'keyword', data.keyword.error, overlap,
+      document.getElementById('trials-keyword-body'),
+      document.getElementById('trials-keyword-meta'),
+      data.keyword.time_seconds,
+    );
+
+    toast(`Retrieval complete — ${overlap.size} shared trials`, 'success');
+  } catch (err) {
+    status.textContent = `Error: ${err.message}`;
+    toast(err.message, 'error');
+    document.getElementById('trials-results').style.display = 'none';
+  } finally {
+    btn.disabled = false;
+  }
 }
 </script>
 </body>
